@@ -1,0 +1,79 @@
+import 'package:gtfs_proto_flutter/src/helpers/null_if_empty.dart';
+import 'package:gtfs_proto_flutter/src/proto/gtfs.pb.dart' as gtfs;
+import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
+import 'package:gtfs_proto_flutter/src/database/table_metadata.dart';
+
+class Agency {
+  final FeedId id;
+  final String name;
+  final String? url;
+  final String? timezone;
+  final String? lang;
+  final String? phone;
+  final String? fareUrl;
+  final String? email;
+
+  Agency({
+    required this.id,
+    required this.name,
+    this.url,
+    this.timezone,
+    this.lang,
+    this.phone,
+    this.fareUrl,
+    this.email,
+  });
+
+  static const kTable = TableMetadata(
+    name: 'agencies',
+    key: 'agency_id',
+    columns: [
+      'name text',
+      'url text',
+      'timezone text',
+      'lang text',
+      'phone text',
+      'fare_url text',
+      'email text',
+    ],
+  );
+
+  factory Agency.fromJson(Map<String, dynamic> data) => Agency(
+    id: kTable.readId(data),
+    name: data['name'],
+    url: data['url'],
+    timezone: data['timezone'],
+    lang: data['lang'],
+    phone: data['phone'],
+    fareUrl: data['fare_url'],
+    email: data['email'],
+  );
+
+  Map<String, dynamic> toJson() => {
+    ...kTable.writeId(id),
+    'name': name,
+    'url': url,
+    'timezone': timezone,
+    'lang': lang,
+    'phone': phone,
+    'fare_url': fareUrl,
+    'email': email,
+  };
+
+  factory Agency.fromProto(int feedId, gtfs.Agency proto) => Agency(
+    id: FeedId(feedId, proto.agencyId),
+    name: proto.name,
+    url: proto.url.nullIfEmpty,
+    timezone: proto.timezone.nullIfEmpty,
+    lang: proto.lang.nullIfEmpty,
+    phone: proto.phone.nullIfEmpty,
+    fareUrl: proto.fareUrl.nullIfEmpty,
+    email: proto.email.nullIfEmpty,
+  );
+
+  @override
+  bool operator ==(Object other) => other is Agency && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+}

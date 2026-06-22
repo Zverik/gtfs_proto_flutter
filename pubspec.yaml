@@ -1,0 +1,24 @@
+name: gtfs_proto_flutter
+description: "GTFS Proto interface library to use public transit in apps."
+version: 0.1.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.10.0
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: ^2.4.2+1
+  latlong2: ^0.9.0
+  protobuf: ^6.0.0
+  zstandard: ^1.5.0
+  fast_geohash: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  sqflite_common_ffi: ^2.4.2
+  libcompress: ^1.0.0

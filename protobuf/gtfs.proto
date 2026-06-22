@@ -1,0 +1,390 @@
+/** Copyright (c) 2026 Ilya Zverev. <ilya@zverev.info>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
+syntax = "proto3";
+
+package gtfs;
+
+/* The file starts with a 6-byte header:
+ * - 'T' 'F' or 'T' 'D', two ASCII characters for GtfsHeader or GtfsDelta.
+ * - '1', protocol version plus 0x30.
+ * - 0x0A, line feed symbol.
+ * - two-byte length of the header, big-endian.
+ */
+
+/* This is the file header with block sizes.
+Fields can come in any order, but in the file, blocks are
+serialized exactly in the order listed here.
+See also the "Block" message below for the order. */
+
+message GtfsHeader {
+  // Versions are incremental. When generating a feed for the next day,
+  // we're using the previous one for reference, and incrementing the version.
+  uint32 version = 1;
+
+  // Date when the original GTFS feed was built, in YYYYMMDD format (20240319).
+  uint32 date = 2;
+
+  // In case of errors, this would be the reference GTFS feed, zip file itself.
+  // Please link to specific builds if possible, e.g. "20240319", not "latest".
+  string original_url = 3;
+
+  // If true, all blocks are compressed with Zstandard.
+  // https://facebook.github.io/zstd/
+  // TODO: maybe leave the compression to external tools, on a file level?
+  bool compressed = 4;
+
+  // Array in order and matching the Blocks enum. Sizes of blocks, not offsets.
+  // Only refers entries between 1 (inclusive) and B_END (not inclusive).
+  // May be cut off earlier, meaning the rest of the block are empty.
+  repeated uint32 blocks = 5;
+}
+
+/* All identifiers are renumbered, starting from 1.
+We do not keep any of original identifiers, so to match
+the data with an OpenTripPlanner instance, for example,
+use the IdStore tables. */
+
+message Agencies {
+  repeated Agency agencies = 1;
+}
+
+message Agency {
+  uint32 agency_id = 1; // identifiers are renumbered
+  string name = 2;
+  string url = 3;
+  string timezone = 4;
+  string lang = 5;
+  string phone = 6;
+  string fare_url = 7;
+  string email = 8;
+}
+
+message Services {
+  // A number just like in GTFS: e.g. 20240821.
+  // All service dates use offsets in days from it.
+  uint32 base_date = 1;
+  repeated Service services = 2;
+}
+
+message Service {
+  uint32 service_id = 1;
+  uint32 start_date = 2; // offset from base_date, non-zero if present
+  uint32 end_date = 3; // offset from base_date, non-zero if present
+  uint32 weekdays = 4; // binary: 1 for Monday, 2 for Tuesday, 4 for Wednesday etc.
+
+  // These fields come from calendar_days.txt.
+  // The first value is offset from base_date, each consequtive
+  // is stored as an offset to previous.
+  repeated uint32 added_days = 5;
+  repeated uint32 removed_days = 6;
+
+  bool delete = 7;
+}
+
+message Shapes {
+  repeated Shape shapes = 1;
+}
+
+message Shape {
+  uint32 shape_id = 1;
+
+  // Numbers multiplied by 100000 (1e5) and rounded.
+  // Mind the accumulated rounding error!
+  // Each number is the difference with the last.
+  // First is difference with 0 or the last from the last non-empty shape.
+  repeated sint32 longitudes = 2;
+  repeated sint32 latitudes = 3;
+}
+
+message Networks {
+  map<uint32, string> networks = 1;
+}
+
+message Areas {
+  map<uint32, string> areas = 1;
+}
+
+message StringTable {
+  // First string is always empty.
+  repeated string strings = 1;
+}
+
+message Stops {
+  repeated Stop stops = 1;
+}
+
+// Lat and lon are differences from the last non-empty stop position
+// (non-empty means, which has non-zero lon or lat).
+message Stop {
+  uint32 stop_id = 1; // this one is generated for this feed
+  string code = 2;
+  uint32 name = 3; // strings reference
+  string desc = 4;
+  sint32 lat = 5; // multiplied by 100000 (1e5), diff from the last
+  sint32 lon = 6; // same
+  LocationType type = 7;
+  uint32 parent_id = 8;
+  Accessibility wheelchair = 9;
+  string platform_code = 10;
+  uint32 zone = 11;
+  repeated uint32 areas = 12;
+
+  bool delete = 13;
+}
+
+enum LocationType {
+  L_STOP = 0; // same as unspecified, the default
+  L_STATION = 1;
+  L_EXIT = 2;
+  L_NODE = 3;
+  L_BOARDING = 4;
+}
+
+enum Accessibility {
+  A_UNKNOWN = 0;
+  A_SOME = 1;
+  A_NO = 2;
+}
+
+message Routes {
+  // Sorted in sort_order if present, and in the source order otherwise.
+  repeated Route routes = 1;
+}
+
+message Route {
+  uint32 route_id = 1; // renumbered
+  uint32 agency_id = 2; // optional if there's just a single agency
+  string short_name = 3;
+  // Long name is assumed to be in format "Stop 1 - Stop 2 - Stop 3".
+  // Each part is a strings reference.
+  // If names are not in this format, just putting all long names verbatim there.
+  repeated uint32 long_name = 4;
+  string desc = 5;
+  RouteType type = 6;
+  uint32 color = 7; // note: black (0x000000) and white (0xffffff) are swapped!
+  uint32 text_color = 8;
+  PickupDropoff continuous_pickup = 9;
+  PickupDropoff continuous_dropoff = 10;
+  uint32 network = 11;
+
+  bool delete = 12;
+}
+
+// See also https://developers.google.com/transit/gtfs/reference/extended-route-types
+enum RouteType {
+  T_BUS = 0; // 3 and all 7xx (buses are the default to keep space)
+  T_TRAM = 1; // 0 and all 9xx
+  T_SUBWAY = 2; // 1 and 401-402
+  T_RAIL = 3; // 2 and all 1xx
+  T_FERRY = 4; // 4 and 1200
+  T_CABLE_TRAM = 5; // 5 and maybe 1302 but not sure
+  T_AERIAL = 6; // 6 and 13xx
+  T_FUNICULAR = 7; // 7 and 1400
+  T_COMMUNAL_TAXI = 9; // 1501
+  T_COACH = 10; // all 200-209
+  T_TROLLEYBUS = 11; // 11 and 800
+  T_MONORAIL = 12; // 12 and 405
+
+  T_URBAN_RAIL = 21; // 400, 403-404
+  T_WATER = 22; // 1000
+  T_AIR = 23; // 1100
+  T_TAXI = 24; // all 15xx except 1501
+  T_MISC = 25; // 17xx
+}
+
+enum PickupDropoff {
+  PD_YES = 0; // the default, for unspecified
+  PD_NO = 1;
+  PD_PHONE_AGENCY = 2;
+  PD_TELL_DRIVER = 3;
+}
+
+message Itineraries {
+  repeated Itinerary itineraries = 1;
+}
+
+/* A sequence of bus stops for a trip is an Itinerary.
+Often there are multiple trips during the day through the same stops,
+so this helps save the bytes. */
+message Itinerary {
+  uint32 itinerary_id = 1; // guaranteed to be unique throughout the entire feed
+  uint32 route_id = 2; // deleting if zero / skipped
+  repeated uint32 stops = 3;
+  bool opposite_direction = 4;
+  uint32 shape_id = 5;
+
+  // List of headsigns for every stop. Those are string references.
+  // Zero when the same as the last. Trimmed at the last non-zero value.
+  repeated uint32 headsigns = 6;
+
+  // If shorter than stops, repeat the last value.
+  repeated PickupDropoff pickup_types = 7;
+  repeated PickupDropoff dropoff_types = 8;
+}
+
+message Trips {
+  repeated Trip trips = 1;
+}
+
+/* This message encapsulates both trips and stop_times. */
+message Trip {
+  uint32 trip_id = 1; // renumbered
+  uint32 itinerary_id = 2; // for properties and order of stops. Deleting if zero/skipped
+  uint32 service_id = 3;
+  string short_name = 4;
+  Accessibility wheelchair = 5;
+  Accessibility bikes = 6;
+
+  // schedule-based: whether we can trust every timestamp for departures/arrivals.
+  // frequency-based: whether the intervals are exact.
+  bool approximate = 7;
+
+  // Granularity is 5 seconds.
+  // First number is (hours * 720) + (minutes * 12) + (seconds / 5), rounded down.
+  // After that, differences from previous time.
+  // Mind the accumulated rounding error!
+  // Zero (0) for a departure means an absent value.
+  repeated uint32 departures = 8;
+  // Counted from same departures (backwards), truncated to the last non-zero value.
+  repeated uint32 arrivals = 9;
+
+  // For frequency-based trips, those three are present.
+  // Granularity is 10 seconds. Values are, hours * 360 + minutes * 6 + seconds / 10.
+  // Rounding down for start and up for end.
+  uint32 start_time = 10;
+  uint32 end_time = 11;
+  // Here, granularity is 1 second, like in GTFS. No point in saving a byte.
+  uint32 interval = 12;
+}
+
+message Transfers {
+  repeated Transfer transfers = 1;
+}
+
+message Transfer {
+  uint32 from_stop = 1;
+  uint32 to_stop = 2;
+  uint32 from_route = 3;
+  uint32 to_route = 4;
+  uint32 from_trip = 5;
+  uint32 to_trip = 6;
+  TransferType type = 7;
+  uint32 min_transfer_time = 8; // granularity is 5 seconds, rounded up (!)
+  bool delete = 9; // for delta files
+}
+
+enum TransferType {
+  TR_POSSIBLE = 0; // default, also unspecified
+  TR_DEPARTURE_WAITS = 1;
+  TR_NEEDS_TIME = 2;
+  TR_NOT_POSSIBLE = 3;
+  TR_IN_SEAT = 4;
+  TR_IN_SEAT_FORBIDDEN = 5;
+}
+
+
+// TODO: Fares
+
+
+/* IdStore is for keeping track of source identifiers and making
+extracts between versions consistent. You do not have to keep all ids
+if you don't use them: renumbered ids are often enough for updates
+and cross-referencing. */
+
+message IdStore {
+  repeated IdReference refs = 1;
+}
+
+message IdReference {
+  Block block = 1;
+  repeated string ids = 2;
+  uint32 delta_skip = 3;
+}
+
+// These go in the file order.
+// Sorted so that you don't need random access, but can process file top to bottom.
+enum Block {
+  B_HEADER = 0;  // GtfsHeader, never actually appears
+  B_IDS = 1;     // IdStore → IdReference
+  B_STRINGS = 2; // StringTable
+
+  // First, dictionaries that are referenced by other tables.
+  B_AGENCY = 3;   // Agencies → Agency
+  B_SERVICES = 4; // Services → base_date + Service
+  B_SHAPES = 5;   // Shapes → Shape
+
+  // And here, the core: stops, routes, and fares.
+  B_STOPS = 6;       // Stops → Stop
+  B_ROUTES = 7;      // Routes → Route
+  B_ITINERARIES = 8; // Itineraries → Itinerary
+  B_TRIPS = 9;       // Trips → Trip
+  B_TRANSFERS = 10;  // Transfers → Transfer
+
+  // Fare-related tables.
+  B_NETWORKS = 11; // Networks
+  B_AREAS = 12;    // Areas
+
+  // No related blocks for values below.
+  B_END = 49;
+  B_ZONES = 50;    // zones are only zone_ids
+}
+
+
+/* Deltas use mostly the same messages, but some are changed. */
+
+message GtfsDeltaHeader {
+  uint32 old_version = 1;
+  uint32 version = 2;
+  uint32 date = 3;
+  bool compressed = 4;
+  repeated uint32 blocks = 5;
+}
+
+// IdStore: same structure, only adding ids, using delta_skip to skip old ids.
+// - Note that if delta_skip is larger than the length of ids for a block,
+//   that means that's the wrong delta file to apply.
+
+// StringTable: all used strings are added to it anew, we do not expect a client to keep old strings.
+
+// Agencies: zero element for same, non-zero for change or addition.
+
+// Services: base_date is specific to the feed and applied only to new and changed records.
+// Service: see "delete" field for deletions; new and changed specify every field.
+
+// Shapes: Shape with just an id to delete, with locations - change or add.
+
+// Stops: Stop with delete=True to delete, with a new id to add, with existing -
+// empty fields stay the same. Fields "wheelchair" and "type" are always set for changed.
+// New ids should continue the sequence.
+
+// Routes: list stops, but for changed, all fields except names and desc are always filled.
+// Itineraries: either created or deleted, there's no change option.
+
+// Trips: like stops: specify just an id to delete, some information when changed,
+// all info when adding a new one. New ids should continue the sequence.
+// Fields "wheelchair", "bikes", and "approximate" are always set for changed.
+
+// Transfers: first six fields serve as a primary key. Uses "delete" field to delete,
+// otherwise add/change with full data inside.
+
+// Networks and Areas: listing only new and changed names in the maps.

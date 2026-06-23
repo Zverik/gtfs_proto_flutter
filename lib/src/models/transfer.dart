@@ -1,4 +1,7 @@
+import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
 import 'package:gtfs_proto_flutter/src/database/table_metadata.dart';
+import 'package:gtfs_proto_flutter/src/helpers/null_if_empty.dart';
+import 'package:gtfs_proto_flutter/src/proto/gtfs.pb.dart' as gtfs;
 
 enum TransferType {
   possible,
@@ -32,10 +35,12 @@ class Transfer {
     this.minTransferTimeSeconds,
   });
 
+  int get databaseId => hashCode;
+
   static const kTable = TableMetadata(
     name: 'transfers',
+    key: 'transfer_id',
     columns: [
-      'feed_id integer',
       'from_stop_id integer',
       'to_stop_id integer',
       'from_route_id integer',
@@ -45,7 +50,6 @@ class Transfer {
       'transfer_type integer',
       'min_time integer',
     ],
-    indexes: ['feed_id'],
   );
 
   factory Transfer.fromJson(Map<String, dynamic> data) => Transfer(
@@ -61,7 +65,7 @@ class Transfer {
   );
 
   Map<String, dynamic> toJson() => {
-    'feed_id': feedId,
+    ...kTable.writeId(FeedId(feedId, databaseId)),
     'from_stop_id': fromStopId,
     'to_stop_id': toStopId,
     'from_route_id': fromRouteId,
@@ -71,6 +75,27 @@ class Transfer {
     'transfer_type': type.index,
     'min_time': minTransferTimeSeconds,
   };
+
+  static const kTransferTypeFromProto = {
+    gtfs.TransferType.TR_POSSIBLE: TransferType.possible,
+    gtfs.TransferType.TR_DEPARTURE_WAITS: TransferType.departureWaits,
+    gtfs.TransferType.TR_NEEDS_TIME: TransferType.needsTime,
+    gtfs.TransferType.TR_NOT_POSSIBLE: TransferType.notPossible,
+    gtfs.TransferType.TR_IN_SEAT: TransferType.inSeat,
+    gtfs.TransferType.TR_IN_SEAT_FORBIDDEN: TransferType.inSeatForbidden,
+  };
+
+  factory Transfer.fromProto(int feedId, gtfs.Transfer proto) => Transfer(
+    feedId: feedId,
+    fromStopId: proto.fromStop.nullIfZero,
+    toStopId: proto.toStop.nullIfZero,
+    fromTripId: proto.fromTrip.nullIfZero,
+    toTripId: proto.toTrip.nullIfZero,
+    fromRouteId: proto.fromRoute.nullIfZero,
+    toRouteId: proto.toRoute.nullIfZero,
+    type: kTransferTypeFromProto[proto.type]!,
+    minTransferTimeSeconds: proto.minTransferTime.nullIfZero,
+  );
 
   @override
   bool operator ==(Object other) =>

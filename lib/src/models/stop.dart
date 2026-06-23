@@ -11,7 +11,7 @@ enum Accessibility { unknown, some, no }
 
 class Stop {
   final FeedId id;
-  final String originalId;
+  final String gtfsId;
   final String? code;
   final String? name;
   final String? description;
@@ -25,7 +25,7 @@ class Stop {
 
   const Stop({
     required this.id,
-    required this.originalId,
+    required this.gtfsId,
     this.code,
     this.name,
     required this.location,
@@ -56,7 +56,7 @@ class Stop {
       'zone_id integer',
       'area_ids text',
     ],
-    indexes: ['geohash', 'code, feed_id'],
+    indexes: ['geohash', 'stop_code, feed_id'],
   );
 
   static const kCoordPrecision = 1e6;
@@ -64,17 +64,14 @@ class Stop {
 
   factory Stop.fromJson(Map<String, dynamic> data) => Stop(
     id: kTable.readId(data),
-    originalId: data['original_id'],
+    gtfsId: data['original_id'],
     code: data['stop_code'],
     name: data['stop_name'],
-    location: LatLng(
-      data['lat'] / kCoordPrecision,
-      data['lon'] / kCoordPrecision,
-    ),
+    location: LatLng(data['lat'] / kCoordPrecision, data['lon'] / kCoordPrecision),
     description: data['stop_desc'],
     type: LocationType.values[data['loc_type']],
     parentStopId: data['parent_id'],
-    accessibility: data['accessibility'],
+    accessibility: Accessibility.values[data['accessibility']],
     platform: data['platform'],
     zoneId: data['zone_id'],
     areaIds: (data['area_ids'] as String? ?? '')
@@ -86,16 +83,12 @@ class Stop {
 
   Map<String, dynamic> toJson() => {
     ...kTable.writeId(id),
-    'original_id': originalId,
+    'original_id': gtfsId,
     'stop_code': code,
     'stop_name': name,
     'lat': (location.latitude * kCoordPrecision).round(),
     'lon': (location.longitude * kCoordPrecision).round(),
-    'geohash': geohash.encode(
-      location.latitude,
-      location.longitude,
-      kGeohashPrecision,
-    ),
+    'geohash': geohash.encode(location.latitude, location.longitude, kGeohashPrecision),
     'stop_desc': description,
     'loc_type': type.index,
     'parent_id': parentStopId,
@@ -119,27 +112,29 @@ class Stop {
     gtfs.Accessibility.A_NO: Accessibility.no,
   };
 
-  factory Stop.fromProto(int feedId, String originalId, List<String> strings, LatLng lastLoc, gtfs.Stop proto) => Stop(
-    id: FeedId(feedId, proto.stopId),
-    originalId: originalId,
-    code: proto.code.nullIfEmpty,
-    name: proto.name == 0 ? null : strings[proto.name],
-    location: LatLng(lastLoc.latitude + proto.lat / 100000.0, lastLoc.longitude + proto.lon / 100000.0),
-    description: proto.desc.nullIfEmpty,
-    type: kLocationFromProto[proto.type]!,
-    accessibility: kAccessibilityFromProto[proto.wheelchair]!,
-    parentStopId: proto.parentId.nullIfZero,
-    platform: proto.platformCode,
-    zoneId: proto.zone.nullIfZero,
-    areaIds: List.of(proto.areas),
-  );
+  factory Stop.fromProto(int feedId, String gtfsId, List<String> strings, LatLng lastLoc, gtfs.Stop proto, Stop? old) =>
+      Stop(
+        id: FeedId(feedId, proto.stopId),
+        gtfsId: gtfsId,
+        code: proto.code.nullIfEmpty ?? old?.code,
+        name: (proto.name == 0 ? null : strings[proto.name]) ?? old?.name,
+        location: proto.lat == 0 && proto.lon == 0
+            ? old!.location
+            : LatLng(lastLoc.latitude + proto.lat / 100000.0, lastLoc.longitude + proto.lon / 100000.0),
+        description: proto.desc.nullIfEmpty ?? old?.description,
+        type: kLocationFromProto[proto.type]!,
+        accessibility: kAccessibilityFromProto[proto.wheelchair]!,
+        parentStopId: proto.parentId.nullIfZero ?? old?.parentStopId,
+        platform: proto.platformCode.nullIfEmpty ?? old?.platform,
+        zoneId: proto.zone.nullIfZero ?? old?.zoneId,
+        areaIds: proto.areas.isNotEmpty ? List.of(proto.areas) : (old?.areaIds ?? []),
+      );
 
   @override
-  bool operator ==(Object other) =>
-      other is Stop && other.id == id && other.originalId == originalId;
+  bool operator ==(Object other) => other is Stop && other.id == id && other.gtfsId == gtfsId;
 
   @override
-  int get hashCode => Object.hash(id, originalId);
+  int get hashCode => Object.hash(id, gtfsId);
 }
 
 class StopTerm {
@@ -154,20 +149,13 @@ class StopTerm {
     indexes: ['word'],
   );
 
-  factory StopTerm.fromJson(Map<String, dynamic> data) => StopTerm(
-    word: data['word'],
-    stopId: FeedId(data['feed_id'], data['stop_id']),
-  );
+  factory StopTerm.fromJson(Map<String, dynamic> data) =>
+      StopTerm(word: data['word'], stopId: FeedId(data['feed_id'], data['stop_id']));
 
-  Map<String, dynamic> toJson() => {
-    'word': word,
-    'feed_id': stopId.feedId,
-    'stop_id': stopId.id,
-  };
+  Map<String, dynamic> toJson() => {'word': word, 'feed_id': stopId.feedId, 'stop_id': stopId.id};
 
   @override
-  bool operator ==(Object other) =>
-      other is StopTerm && other.word == word && other.stopId == stopId;
+  bool operator ==(Object other) => other is StopTerm && other.word == word && other.stopId == stopId;
 
   @override
   int get hashCode => Object.hash(word, stopId);

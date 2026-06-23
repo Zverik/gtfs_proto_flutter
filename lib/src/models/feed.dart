@@ -24,7 +24,7 @@ class Feed {
       'version integer',
       'updated integer',
     ],
-    indexes: ['name'],
+    indexes: ['feed_name'],
   );
 
   factory Feed.fromJson(Map<String, dynamic> data) => Feed(

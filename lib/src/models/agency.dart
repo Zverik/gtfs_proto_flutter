@@ -5,6 +5,7 @@ import 'package:gtfs_proto_flutter/src/database/table_metadata.dart';
 
 class Agency {
   final FeedId id;
+  final String gtfsId;
   final String name;
   final String? url;
   final String? timezone;
@@ -15,6 +16,7 @@ class Agency {
 
   Agency({
     required this.id,
+    required this.gtfsId,
     required this.name,
     this.url,
     this.timezone,
@@ -28,6 +30,7 @@ class Agency {
     name: 'agencies',
     key: 'agency_id',
     columns: [
+      'agency_gtfs_id text',
       'name text',
       'url text',
       'timezone text',
@@ -40,6 +43,7 @@ class Agency {
 
   factory Agency.fromJson(Map<String, dynamic> data) => Agency(
     id: kTable.readId(data),
+    gtfsId: data['agency_gtfs_id'],
     name: data['name'],
     url: data['url'],
     timezone: data['timezone'],
@@ -51,6 +55,7 @@ class Agency {
 
   Map<String, dynamic> toJson() => {
     ...kTable.writeId(id),
+    'agency_gtfs_id': gtfsId,
     'name': name,
     'url': url,
     'timezone': timezone,
@@ -60,8 +65,9 @@ class Agency {
     'email': email,
   };
 
-  factory Agency.fromProto(int feedId, gtfs.Agency proto) => Agency(
+  factory Agency.fromProto(int feedId, String gtfsId, gtfs.Agency proto) => Agency(
     id: FeedId(feedId, proto.agencyId),
+    gtfsId: gtfsId,
     name: proto.name,
     url: proto.url.nullIfEmpty,
     timezone: proto.timezone.nullIfEmpty,

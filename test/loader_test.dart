@@ -5,9 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gtfs_proto_flutter/src/database/database.dart';
 import 'package:gtfs_proto_flutter/src/helpers/zstd_wrapper.dart';
 import 'package:gtfs_proto_flutter/src/loader.dart';
-import 'package:gtfs_proto_flutter/src/queries/all.dart';
+import 'package:gtfs_proto_flutter/src/models.dart';
+import 'package:gtfs_proto_flutter/src/queries.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
 import 'package:libcompress/libcompress.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class TestZstdDecompressor implements ZstdDecompressor {
@@ -25,10 +26,20 @@ void main() {
     final helper = DatabaseHelper(databaseName: inMemoryDatabasePath);
     final loader = ProtoLoader(helper, decompressor: TestZstdDecompressor());
     final file = File('test/fixture/feed.gtp');
-    await loader.loadFromBytes('test', file.readAsBytesSync());
+    await loader.loadFromBytes('feed', file.readAsBytesSync());
+    // await loader.loadFromBytes('feed', file.readAsBytesSync(), (stage, p) => print('$stage $p%'));
 
     final queries = Queries(helper);
-    final feedId = await queries.feeds.getByName('test');
+    final feedId = await queries.feeds.getByName('feed');
     expect(feedId, isNotNull);
+
+    expect(await queries.stops.getAllStops('feed'), hasLength(7));
+    final stop3 = await queries.stops.getByCode('feed', '0010-03');
+    expect(stop3, isNotNull);
+    expect(stop3!.gtfsId, 'stop3');
+    expect(stop3.name, 'Stop 3');
+    expect(stop3.type, LocationType.stop);
+    expect(stop3.location, LatLng(41.8911, 12.4930));
+    expect(stop3.accessibility, Accessibility.no);
   });
 }

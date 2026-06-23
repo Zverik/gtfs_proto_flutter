@@ -9,7 +9,7 @@ class FeedQueries {
   Future<Feed?> getByName(String feedName) async {
     final db = await _database.database;
     final result = await db.rawQuery(
-      'select * from ${Feed.kTable.name} where name = ?',
+      'select * from ${Feed.kTable.name} where feed_name = ?',
       [feedName],
     );
     return result.isEmpty ? null : Feed.fromJson(result.first);

@@ -3,12 +3,15 @@ import 'dart:math' show max;
 import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
 import 'package:gtfs_proto_flutter/src/database/table_metadata.dart';
 import 'package:gtfs_proto_flutter/src/helpers/just_time.dart';
+import 'package:gtfs_proto_flutter/src/helpers/null_if_empty.dart';
+import 'package:gtfs_proto_flutter/src/helpers/rolling_map.dart';
 import 'package:gtfs_proto_flutter/src/models/arrival.dart';
 import 'package:gtfs_proto_flutter/src/models/stop.dart';
+import 'package:gtfs_proto_flutter/src/proto/gtfs.pb.dart' as gtfs;
 
 class Trip {
   final FeedId id;
-  final String originalId;
+  final String gtfsId;
   final int itineraryId;
   final int serviceId;
   final String? name;
@@ -23,7 +26,7 @@ class Trip {
 
   Trip({
     required this.id,
-    required this.originalId,
+    required this.gtfsId,
     required this.itineraryId,
     required this.serviceId,
     this.name,
@@ -76,19 +79,19 @@ class Trip {
 
   factory Trip.fromJson(Map<String, dynamic> data) => Trip(
     id: kTable.readId(data),
-    originalId: data['gtfs_trip_id'],
+    gtfsId: data['gtfs_trip_id'],
     itineraryId: data['itinerary_id'],
     serviceId: data['service_id'],
     name: data['trip_name'],
     wheelchair: Accessibility.values[data['wheelchair'] ?? 0],
     bikes: Accessibility.values[data['bikes'] ?? 0],
     approximate: data['approximate'] == 1,
-    departures: (data['departures'] as String ?? '')
+    departures: (data['departures'] as String? ?? '')
         .split(',')
         .where((s) => s.isNotEmpty)
         .map((s) => JustTime.fromInt(int.parse(s)))
         .toList(),
-    arrivals: (data['arrivals'] as String ?? '')
+    arrivals: (data['arrivals'] as String? ?? '')
         .split(',')
         .where((s) => s.isNotEmpty)
         .map((s) => JustTime.fromInt(int.parse(s)))
@@ -120,7 +123,7 @@ class Trip {
 
   Map<String, dynamic> toJson() => {
     ...kTable.writeId(id),
-    'gtfs_trip_id': originalId,
+    'gtfs_trip_id': gtfsId,
     'itinerary_id': itineraryId,
     'service_id': serviceId,
     'trip_name': name,
@@ -132,14 +135,32 @@ class Trip {
     'start_time': startTime?.toInt(),
     'end_time': endTime?.toInt(),
     'interval': interval,
-    'first_arrival': _getFirstArrival(),
-    'last_departure': _getLastDeparture(),
+    'first_arrival': _getFirstArrival().toInt(),
+    'last_departure': _getLastDeparture().toInt(),
   };
+
+  factory Trip.fromProto(int feedId, String gtfsId, List<String> strings, gtfs.Trip proto, Trip? old) => Trip(
+    id: FeedId(feedId, proto.tripId),
+    gtfsId: gtfsId,
+    itineraryId: proto.itineraryId,
+    serviceId: proto.serviceId,
+    name: proto.shortName.nullIfEmpty ?? old?.name,
+    wheelchair: Stop.kAccessibilityFromProto[proto.wheelchair]!,
+    bikes: Stop.kAccessibilityFromProto[proto.bikes]!,
+    approximate: proto.approximate,
+    // TODO: zero means an absent value!
+    departures: proto.departures.rollingMap(JustTime.fromInt(0), (prev, time) => prev.plusSeconds(time * 5)).toList(),
+    // TODO: zero means an absent value!
+    arrivals: proto.arrivals.rollingMap(JustTime.fromInt(0), (prev, time) => prev.plusSeconds(time * 5)).toList(),
+    startTime: proto.startTime == 0 ? null : JustTime.fromInt(proto.startTime * 10),
+    endTime: proto.endTime == 0 ? null : JustTime.fromInt(proto.endTime * 10),
+    interval: proto.interval.nullIfZero,
+  );
 
   @override
   bool operator ==(Object other) =>
-      other is Trip && other.id == id && other.originalId == originalId;
+      other is Trip && other.id == id && other.gtfsId == gtfsId;
 
   @override
-  int get hashCode => Object.hash(id, originalId);
+  int get hashCode => Object.hash(id, gtfsId);
 }

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:fast_geohash/fast_geohash_str.dart';
@@ -7,14 +6,8 @@ import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
 import 'package:gtfs_proto_flutter/src/helpers/just_date.dart';
 import 'package:gtfs_proto_flutter/src/helpers/just_time.dart';
 import 'package:gtfs_proto_flutter/src/loader.dart';
-import 'package:gtfs_proto_flutter/src/models/arrival.dart';
-import 'package:gtfs_proto_flutter/src/models/itinerary.dart';
-import 'package:gtfs_proto_flutter/src/models/route.dart';
-import 'package:gtfs_proto_flutter/src/models/shape.dart';
-import 'package:gtfs_proto_flutter/src/models/stop.dart';
-import 'package:gtfs_proto_flutter/src/models/service.dart';
-import 'package:gtfs_proto_flutter/src/models/trip.dart';
-import 'package:gtfs_proto_flutter/src/queries/all.dart';
+import 'package:gtfs_proto_flutter/src/models.dart';
+import 'package:gtfs_proto_flutter/src/queries.dart';
 import 'package:latlong2/latlong.dart';
 
 class GtfsProto {

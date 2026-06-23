@@ -1,12 +1,4 @@
-import 'package:gtfs_proto_flutter/src/models/agency.dart';
-import 'package:gtfs_proto_flutter/src/models/feed.dart';
-import 'package:gtfs_proto_flutter/src/models/itinerary.dart';
-import 'package:gtfs_proto_flutter/src/models/shape.dart';
-import 'package:gtfs_proto_flutter/src/models/stop.dart';
-import 'package:gtfs_proto_flutter/src/models/service.dart';
-import 'package:gtfs_proto_flutter/src/models/route.dart';
-import 'package:gtfs_proto_flutter/src/models/transfer.dart';
-import 'package:gtfs_proto_flutter/src/models/trip.dart';
+import 'package:gtfs_proto_flutter/src/models.dart' as m;
 import 'package:sqflite/sqflite.dart';
 
 /// Creates and manages the database. There should be just one instance of this
@@ -34,17 +26,19 @@ class DatabaseHelper {
   }
 
   static const kTables = [
-    Feed.kTable,
-    Agency.kTable,
-    Service.kTable,
-    DateServices.kTable,
-    Shape.kTable,
-    Stop.kTable,
-    Route.kTable,
-    Itinerary.kTable,
-    ItineraryStopRef.kTable,
-    Trip.kTable,
-    Transfer.kTable,
+    m.Feed.kTable,
+    m.Agency.kTable,
+    m.Area.kTable,
+    m.Service.kTable,
+    m.DateServices.kTable,
+    m.Network.kTable,
+    m.Shape.kTable,
+    m.Stop.kTable,
+    m.Route.kTable,
+    m.Itinerary.kTable,
+    m.ItineraryStopRef.kTable,
+    m.Trip.kTable,
+    m.Transfer.kTable,
   ];
 
   void initDatabase(Database database, int version) async {

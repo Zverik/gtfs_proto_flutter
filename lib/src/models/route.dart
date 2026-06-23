@@ -2,6 +2,8 @@ import 'dart:ui' show Color;
 
 import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
 import 'package:gtfs_proto_flutter/src/database/table_metadata.dart';
+import 'package:gtfs_proto_flutter/src/helpers/null_if_empty.dart';
+import 'package:gtfs_proto_flutter/src/proto/gtfs.pb.dart' as gtfs;
 
 enum RouteType {
   bus,
@@ -27,7 +29,7 @@ enum PickupDropoff { yes, no, phoneAgency, tellDriver }
 
 class Route {
   final FeedId id;
-  final String originalId;
+  final String gtfsId;
   final int? agencyId;
   final String? shortName;
   final String? longName;
@@ -41,7 +43,7 @@ class Route {
 
   Route({
     required this.id,
-    required this.originalId,
+    required this.gtfsId,
     this.agencyId,
     this.shortName,
     this.longName,
@@ -77,7 +79,7 @@ class Route {
 
   factory Route.fromJson(Map<String, dynamic> data) => Route(
     id: kTable.readId(data),
-    originalId: data['gtfs_route_id'],
+    gtfsId: data['gtfs_route_id'],
     agencyId: data['agency_id'],
     shortName: data['short_name'],
     longName: data['long_name'],
@@ -92,7 +94,7 @@ class Route {
 
   Map<String, dynamic> toJson() => {
     ...kTable.writeId(id),
-    'gtfs_route_id': originalId,
+    'gtfs_route_id': gtfsId,
     'agency_id': agencyId,
     'short_name': shortName,
     'long_name': longName,
@@ -105,9 +107,67 @@ class Route {
     'network_id': networkId,
   };
 
-  @override
-  bool operator ==(Object other) => other is Route && other.id == id && other.originalId == originalId;
+  static final kRouteTypeFromProto = {
+    gtfs.RouteType.T_BUS: RouteType.bus,
+    gtfs.RouteType.T_TRAM: RouteType.tram,
+    gtfs.RouteType.T_SUBWAY: RouteType.subway,
+    gtfs.RouteType.T_RAIL: RouteType.rail,
+    gtfs.RouteType.T_FERRY: RouteType.ferry,
+    gtfs.RouteType.T_CABLE_TRAM: RouteType.cableTram,
+    gtfs.RouteType.T_AERIAL: RouteType.aerial,
+    gtfs.RouteType.T_FUNICULAR: RouteType.funicular,
+    gtfs.RouteType.T_COMMUNAL_TAXI: RouteType.communalTaxi,
+    gtfs.RouteType.T_COACH: RouteType.coach,
+    gtfs.RouteType.T_TROLLEYBUS: RouteType.trolleybus,
+    gtfs.RouteType.T_MONORAIL: RouteType.monorail,
+    gtfs.RouteType.T_URBAN_RAIL: RouteType.urbanRail,
+    gtfs.RouteType.T_WATER: RouteType.water,
+    gtfs.RouteType.T_AIR: RouteType.air,
+    gtfs.RouteType.T_TAXI: RouteType.taxi,
+    gtfs.RouteType.T_MISC: RouteType.misc,
+  };
+
+  static final kPickupDropoffFromProto = {
+    gtfs.PickupDropoff.PD_YES: PickupDropoff.yes,
+    gtfs.PickupDropoff.PD_NO: PickupDropoff.no,
+    gtfs.PickupDropoff.PD_TELL_DRIVER: PickupDropoff.tellDriver,
+    gtfs.PickupDropoff.PD_PHONE_AGENCY: PickupDropoff.phoneAgency,
+  };
+
+  factory Route.fromProto(
+    int feedId,
+    String gtfsId,
+    int? agencyId,
+    List<String> strings,
+    gtfs.Route proto,
+    Route? old,
+  ) => Route(
+    id: FeedId(feedId, proto.routeId),
+    gtfsId: gtfsId,
+    agencyId: proto.agencyId == 0 ? agencyId! : proto.agencyId,
+    shortName: proto.shortName.nullIfEmpty ?? old?.shortName,
+    longName: proto.longName.isNotEmpty
+        ? proto.longName.map((idx) => strings[idx]).join(' — ').nullIfEmpty
+        : old?.longName,
+    description: proto.desc.nullIfEmpty ?? old?.description,
+    routeType: kRouteTypeFromProto[proto.type]!,
+    color: Color(
+      0xFF000000 |
+          (proto.color == 0
+              ? 0xFFFFFF
+              : proto.color == 0xFFFFFF
+              ? 0
+              : proto.color),
+    ),
+    textColor: Color(0xFF000000 | proto.textColor),
+    continuousPickup: kPickupDropoffFromProto[proto.continuousPickup]!,
+    continuousDropoff: kPickupDropoffFromProto[proto.continuousDropoff]!,
+    networkId: proto.network.nullIfZero,
+  );
 
   @override
-  int get hashCode => Object.hash(id, originalId);
+  bool operator ==(Object other) => other is Route && other.id == id && other.gtfsId == gtfsId;
+
+  @override
+  int get hashCode => Object.hash(id, gtfsId);
 }

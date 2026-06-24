@@ -7,6 +7,8 @@ import 'package:gtfs_proto_flutter/src/helpers/rolling_map.dart';
 import 'package:gtfs_proto_flutter/src/helpers/zstd_wrapper.dart';
 import 'package:gtfs_proto_flutter/src/helpers/just_date.dart';
 import 'package:gtfs_proto_flutter/src/models.dart' as m;
+import 'package:gtfs_proto_flutter/src/queries/agency.dart';
+import 'package:gtfs_proto_flutter/src/queries/itinerary.dart';
 import 'package:gtfs_proto_flutter/src/queries/route.dart';
 import 'package:gtfs_proto_flutter/src/queries/stop.dart';
 import 'package:gtfs_proto_flutter/src/queries/trip.dart';
@@ -199,7 +201,7 @@ class ProtoLoader {
         final str = gtfs.StringTable.fromBuffer(block);
         strings.addAll(str.strings);
       } else if (blockId == gtfs.Block.B_AGENCY.value) {
-        agencyId = await _loadAgencies(txn, feed.id, idRefs[gtfs.Block.B_AGENCY]!, block);
+        agencyId = await _loadAgencies(txn, feed.id, idRefs[gtfs.Block.B_AGENCY]!, isDelta, block);
       } else if (blockId == gtfs.Block.B_SERVICES.value) {
         await _loadServices(txn, feed.id, idRefs[gtfs.Block.B_SERVICES]!, isDelta, block);
       } else if (blockId == gtfs.Block.B_SHAPES.value) {
@@ -224,13 +226,14 @@ class ProtoLoader {
     }
   }
 
-  Future<int?> _loadAgencies(Transaction txn, int feedId, List<String> gtfsIds, Uint8List block) async {
+  Future<int?> _loadAgencies(Transaction txn, int feedId, List<String> gtfsIds, bool isDelta, Uint8List block) async {
     final agencies = gtfs.Agencies.fromBuffer(block);
     final batch = txn.batch();
     final agencyIds = <int>[];
     for (final agency in agencies.agencies) {
       agencyIds.add(agency.agencyId);
-      final dbAgency = m.Agency.fromProto(feedId, gtfsIds[agency.agencyId], agency);
+      final lastAgency = isDelta ? await AgencyQueries.queryById(txn, FeedId(feedId, agency.agencyId)) : null;
+      final dbAgency = m.Agency.fromProto(feedId, gtfsIds[agency.agencyId], agency, lastAgency);
       batch.insert(m.Agency.kTable.name, dbAgency.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit();
@@ -325,6 +328,10 @@ class ProtoLoader {
     bool isDelta,
     Uint8List block,
   ) async {
+    if (isDelta) {
+      // We do not believe agencyId for deltas, better get it from the database.
+      agencyId = await AgencyQueries.querySingleId(txn, feedId);
+    }
     final routes = gtfs.Routes.fromBuffer(block);
     final batch = txn.batch();
     for (final route in routes.routes) {
@@ -369,7 +376,8 @@ class ProtoLoader {
           whereArgs: [feedId, itinerary.itineraryId],
         );
       } else {
-        final dbItin = m.Itinerary.fromProto(feedId, strings, itinerary);
+        final lastItin = isDelta ? await ItineraryQueries.queryById(txn, FeedId(feedId, itinerary.itineraryId)) : null;
+        final dbItin = m.Itinerary.fromProto(feedId, strings, itinerary, lastItin);
         final algo = isDelta ? ConflictAlgorithm.replace : ConflictAlgorithm.rollback;
         batch.insert(m.Itinerary.kTable.name, dbItin.toJson(), conflictAlgorithm: algo);
         for (final stopRef in dbItin.toStopRefs()) {
@@ -398,7 +406,7 @@ class ProtoLoader {
         batch.delete(m.Trip.kTable.name, where: 'feed_id = ? and trip_id = ?', whereArgs: [feedId, trip.tripId]);
       } else {
         final lastTrip = isDelta ? await TripQueries.queryById(txn, FeedId(feedId, trip.tripId)) : null;
-        final dbTrip = m.Trip.fromProto(feedId, gtfsIds[trip.tripId], strings, trip, lastTrip);
+        final dbTrip = m.Trip.fromProto(feedId, gtfsIds[trip.tripId], trip, lastTrip);
         final algo = isDelta ? ConflictAlgorithm.replace : ConflictAlgorithm.rollback;
         batch.insert(m.Trip.kTable.name, dbTrip.toJson(), conflictAlgorithm: algo);
       }

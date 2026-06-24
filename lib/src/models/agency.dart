@@ -65,16 +65,16 @@ class Agency {
     'email': email,
   };
 
-  factory Agency.fromProto(int feedId, String gtfsId, gtfs.Agency proto) => Agency(
+  factory Agency.fromProto(int feedId, String gtfsId, gtfs.Agency proto, Agency? old) => Agency(
     id: FeedId(feedId, proto.agencyId),
     gtfsId: gtfsId,
-    name: proto.name,
-    url: proto.url.nullIfEmpty,
-    timezone: proto.timezone.nullIfEmpty,
-    lang: proto.lang.nullIfEmpty,
-    phone: proto.phone.nullIfEmpty,
-    fareUrl: proto.fareUrl.nullIfEmpty,
-    email: proto.email.nullIfEmpty,
+    name: proto.name.nullIfEmpty ?? old!.name,
+    url: proto.url.nullIfEmpty ?? old?.url,
+    timezone: proto.timezone.nullIfEmpty ?? old?.timezone,
+    lang: proto.lang.nullIfEmpty ?? old?.lang,
+    phone: proto.phone.nullIfEmpty ?? old?.phone,
+    fareUrl: proto.fareUrl.nullIfEmpty ?? old?.fareUrl,
+    email: proto.email.nullIfEmpty ?? old?.email,
   );
 
   @override

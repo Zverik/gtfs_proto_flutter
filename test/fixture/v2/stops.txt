@@ -1,0 +1,8 @@
+stop_id,stop_code,stop_name,stop_lat,stop_lon,zone_id,wheelchair_boarding
+stop1,0010-01,Stop 1,41.8901,12.4921,A,1
+stop2,0010-02,Stop 2,41.8902,12.4931,A,1
+stop3,0010-03,Stop 3,41.8911,12.4930,B,2
+stop4,0010-04,Stop 4,41.8912,12.4931,B,2
+stop5,0010-05,Stop 5,41.8901,12.4921,A,
+stop6,0010-06,Stop 6,41.8902,12.4931,A,
+stop7,0010-07,Stop 7,41.8901,12.4932,A,

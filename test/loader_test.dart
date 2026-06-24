@@ -19,12 +19,13 @@ class TestZstdDecompressor implements ZstdDecompressor {
 }
 
 void main() {
-  test('Loads everything correctly', () async {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
 
-    final helper = DatabaseHelper(databaseName: inMemoryDatabasePath);
-    final loader = ProtoLoader(helper, decompressor: TestZstdDecompressor());
+  final helper = DatabaseHelper(databaseName: inMemoryDatabasePath);
+  final loader = ProtoLoader(helper, decompressor: TestZstdDecompressor());
+
+  test('Loads everything correctly', () async {
     final file = File('test/fixture/feed.gtp');
     await loader.loadFromBytes('feed', file.readAsBytesSync());
     // await loader.loadFromBytes('feed', file.readAsBytesSync(), (stage, p) => print('$stage $p%'));
@@ -41,5 +42,11 @@ void main() {
     expect(stop3.type, LocationType.stop);
     expect(stop3.location, LatLng(41.8911, 12.4930));
     expect(stop3.accessibility, Accessibility.no);
+  });
+
+  test('Loads a delta correctly', () async {
+    final file = File('test/fixture/delta.gtp');
+    await loader.loadFromBytes('feed', file.readAsBytesSync());
+    // TODO
   });
 }

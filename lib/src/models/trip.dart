@@ -139,22 +139,24 @@ class Trip {
     'last_departure': _getLastDeparture().toInt(),
   };
 
-  factory Trip.fromProto(int feedId, String gtfsId, List<String> strings, gtfs.Trip proto, Trip? old) => Trip(
+  factory Trip.fromProto(int feedId, String gtfsId, gtfs.Trip proto, Trip? old) => Trip(
     id: FeedId(feedId, proto.tripId),
     gtfsId: gtfsId,
     itineraryId: proto.itineraryId,
-    serviceId: proto.serviceId,
+    serviceId: proto.serviceId.nullIfZero ?? old!.serviceId,
     name: proto.shortName.nullIfEmpty ?? old?.name,
     wheelchair: Stop.kAccessibilityFromProto[proto.wheelchair]!,
     bikes: Stop.kAccessibilityFromProto[proto.bikes]!,
     approximate: proto.approximate,
     // TODO: zero means an absent value!
+    // TODO: take from old when empty
     departures: proto.departures.rollingMap(JustTime.fromInt(0), (prev, time) => prev.plusSeconds(time * 5)).toList(),
     // TODO: zero means an absent value!
+    // TODO: take from old when empty
     arrivals: proto.arrivals.rollingMap(JustTime.fromInt(0), (prev, time) => prev.plusSeconds(time * 5)).toList(),
-    startTime: proto.startTime == 0 ? null : JustTime.fromInt(proto.startTime * 10),
-    endTime: proto.endTime == 0 ? null : JustTime.fromInt(proto.endTime * 10),
-    interval: proto.interval.nullIfZero,
+    startTime: proto.startTime == 0 ? old?.startTime : JustTime.fromInt(proto.startTime * 10),
+    endTime: proto.endTime == 0 ? old?.endTime : JustTime.fromInt(proto.endTime * 10),
+    interval: proto.interval.nullIfZero ?? old?.interval,
   );
 
   @override

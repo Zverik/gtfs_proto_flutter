@@ -30,7 +30,7 @@ enum PickupDropoff { yes, no, phoneAgency, tellDriver }
 class Route {
   final FeedId id;
   final String gtfsId;
-  final int? agencyId;
+  final int agencyId;
   final String? shortName;
   final String? longName;
   final String? description;
@@ -44,7 +44,7 @@ class Route {
   Route({
     required this.id,
     required this.gtfsId,
-    this.agencyId,
+    required this.agencyId,
     this.shortName,
     this.longName,
     this.description,

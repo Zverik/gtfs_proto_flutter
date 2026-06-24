@@ -1,0 +1,3 @@
+route_id,agency_id,route_short_name,route_long_name,route_type,route_color
+ROUTE1,AGENCY,B1,long name,3,eebbee
+ROUTE2,AGENCY,T1,another route,0,bbeecc

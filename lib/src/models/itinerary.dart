@@ -64,7 +64,11 @@ class Itinerary {
   factory Itinerary.fromProto(int feedId, List<String> strings, gtfs.Itinerary proto, Itinerary? old) {
     final stops = proto.stops.isEmpty ? old!.stops.map((s) => s.stopId).toList() : proto.stops;
     // TODO: those three can also be empty
-    final headsigns = proto.headsigns.rollingMap(null, (String? p, idx) => idx == 0 ? p : strings[idx]).toList();
+    const nullString = '###';
+    final headsigns = proto.headsigns
+        .rollingMap(nullString, (String p, idx) => idx == 0 ? p : strings[idx])
+        .map((s) => s == nullString ? null : s)
+        .toList();
     final pickups = proto.pickupTypes.map((pd) => Route.kPickupDropoffFromProto[pd]!).toList();
     final dropoffs = proto.dropoffTypes.map((pd) => Route.kPickupDropoffFromProto[pd]!).toList();
     return Itinerary(
@@ -72,12 +76,16 @@ class Itinerary {
       routeId: proto.routeId,
       shapeId: proto.shapeId,
       oppositeDirection: proto.oppositeDirection,
-      stops: stops.indexed.map((stop) => ItineraryStop(
-        stopId: stop.$2,
-        headsign: stop.$1 < headsigns.length ? headsigns[stop.$1] : headsigns.lastOrNull,
-        pickup: stop.$1 < pickups.length ? pickups[stop.$1] : pickups.lastOrNull ?? PickupDropoff.yes,
-        dropoff: stop.$1 < dropoffs.length ? dropoffs[stop.$1] : dropoffs.lastOrNull ?? PickupDropoff.yes,
-      )).toList(),
+      stops: stops.indexed
+          .map(
+            (stop) => ItineraryStop(
+              stopId: stop.$2,
+              headsign: stop.$1 < headsigns.length ? headsigns[stop.$1] : headsigns.lastOrNull,
+              pickup: stop.$1 < pickups.length ? pickups[stop.$1] : pickups.lastOrNull ?? PickupDropoff.yes,
+              dropoff: stop.$1 < dropoffs.length ? dropoffs[stop.$1] : dropoffs.lastOrNull ?? PickupDropoff.yes,
+            ),
+          )
+          .toList(),
     );
   }
 

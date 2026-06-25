@@ -195,6 +195,7 @@ class ProtoLoader {
       if (blockId == gtfs.Block.B_IDS.value) {
         final idStore = gtfs.IdStore.fromBuffer(block);
         for (final refs in idStore.refs) {
+          // TODO: delta_skip
           idRefs[refs.block] = refs.ids;
         }
       } else if (blockId == gtfs.Block.B_STRINGS.value) {

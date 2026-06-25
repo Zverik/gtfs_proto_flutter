@@ -49,7 +49,7 @@ class RollingMappedIterator<S, T> implements Iterator<T> {
   bool moveNext() {
     if (_iterator.moveNext()) {
       _current = _f(_prev, _iterator.current);
-      _prev = _current!;
+      _prev = _current!; // issues when T is nullable
       return true;
     }
     _current = null;

@@ -18,8 +18,8 @@ class Trip {
   final Accessibility wheelchair;
   final Accessibility bikes;
   bool approximate;
-  final List<JustTime> departures;
-  final List<JustTime> arrivals;
+  final List<JustTime?> departures;
+  final List<JustTime?> arrivals;
   final JustTime? startTime;
   final JustTime? endTime;
   final int? interval;
@@ -40,17 +40,9 @@ class Trip {
     this.interval,
   });
 
-  SpecificTripId specificTrip({
-    required DateTime departure,
-    int sequence = 0,
-    bool liveDeparture = false,
-  }) {
+  SpecificTripId specificTrip({required DateTime departure, int sequence = 0, bool liveDeparture = false}) {
     // TODO: we know the exact time of departure for [sequence], need to get the first one.
-    return SpecificTripId(
-      tripId: id,
-      firstDeparture: departure,
-      approximate: !liveDeparture,
-    );
+    return SpecificTripId(tripId: id, firstDeparture: departure, approximate: !liveDeparture);
   }
 
   static const kTable = TableMetadata(
@@ -72,9 +64,7 @@ class Trip {
       'first_arrival integer',
       'last_departure integer',
     ],
-    indexes: [
-      'feed_id, itinerary_id, service_id, first_arrival, last_departure',
-    ],
+    indexes: ['feed_id, itinerary_id, service_id, first_arrival, last_departure'],
   );
 
   factory Trip.fromJson(Map<String, dynamic> data) => Trip(
@@ -89,35 +79,27 @@ class Trip {
     departures: (data['departures'] as String? ?? '')
         .split(',')
         .where((s) => s.isNotEmpty)
-        .map((s) => JustTime.fromInt(int.parse(s)))
+        .map((s) => s == '-1' ? null : JustTime.fromInt(int.parse(s)))
         .toList(),
     arrivals: (data['arrivals'] as String? ?? '')
         .split(',')
         .where((s) => s.isNotEmpty)
-        .map((s) => JustTime.fromInt(int.parse(s)))
+        .map((s) => s == '-1' ? null : JustTime.fromInt(int.parse(s)))
         .toList(),
-    startTime: data['start_time'] == null
-        ? null
-        : JustTime.fromInt(data['start_time']),
-    endTime: data['end_time'] == null
-        ? null
-        : JustTime.fromInt(data['end_time']),
-    interval: int.tryParse(data['interval'] ?? ''),
+    startTime: data['start_time'] == null ? null : JustTime.fromInt(data['start_time']),
+    endTime: data['end_time'] == null ? null : JustTime.fromInt(data['end_time']),
+    interval: data['interval'],
   );
 
-  JustTime _getFirstArrival() =>
-      startTime ?? arrivals.firstOrNull ?? departures.first;
+  JustTime _getFirstArrival() => startTime ?? arrivals.firstOrNull ?? departures.first!;
 
   JustTime _getLastDeparture() {
-    if (endTime == null) return departures.lastOrNull ?? arrivals.last;
+    if (endTime == null) return departures.lastOrNull ?? arrivals.last!;
     // endTime is the time of the first arrival.
-    int arrivalDelta = arrivals.length < 2
-        ? 0
-        : arrivals.last.toInt() - arrivals.first.toInt();
+    int arrivalDelta = arrivals.length < 2 ? 0 : arrivals.last!.toInt() - arrivals.first!.toInt();
     int depDelta = departures.length < 2
         ? 0
-        : departures.last.toInt() -
-              (arrivals.firstOrNull?.toInt() ?? departures.first.toInt());
+        : departures.last!.toInt() - (arrivals.firstOrNull?.toInt() ?? departures.first!.toInt());
     return JustTime.fromInt(endTime!.toInt() + max(arrivalDelta, depDelta));
   }
 
@@ -130,8 +112,8 @@ class Trip {
     'wheelchair': wheelchair.index,
     'bikes': bikes.index,
     'approximate': approximate ? 1 : 0,
-    'departures': departures.map((d) => d.toInt()).join(','),
-    'arrivals': arrivals.map((d) => d.toInt()).join(','),
+    'departures': departures.map((d) => d?.toInt() ?? -1).join(','),
+    'arrivals': arrivals.map((d) => d?.toInt() ?? -1).join(','),
     'start_time': startTime?.toInt(),
     'end_time': endTime?.toInt(),
     'interval': interval,
@@ -139,29 +121,39 @@ class Trip {
     'last_departure': _getLastDeparture().toInt(),
   };
 
-  factory Trip.fromProto(int feedId, String gtfsId, gtfs.Trip proto, Trip? old) => Trip(
-    id: FeedId(feedId, proto.tripId),
-    gtfsId: gtfsId,
-    itineraryId: proto.itineraryId,
-    serviceId: proto.serviceId.nullIfZero ?? old!.serviceId,
-    name: proto.shortName.nullIfEmpty ?? old?.name,
-    wheelchair: Stop.kAccessibilityFromProto[proto.wheelchair]!,
-    bikes: Stop.kAccessibilityFromProto[proto.bikes]!,
-    approximate: proto.approximate,
-    // TODO: zero means an absent value!
-    // TODO: take from old when empty
-    departures: proto.departures.rollingMap(JustTime.fromInt(0), (prev, time) => prev.plusSeconds(time * 5)).toList(),
-    // TODO: zero means an absent value!
-    // TODO: take from old when empty
-    arrivals: proto.arrivals.rollingMap(JustTime.fromInt(0), (prev, time) => prev.plusSeconds(time * 5)).toList(),
-    startTime: proto.startTime == 0 ? old?.startTime : JustTime.fromInt(proto.startTime * 10),
-    endTime: proto.endTime == 0 ? old?.endTime : JustTime.fromInt(proto.endTime * 10),
-    interval: proto.interval.nullIfZero ?? old?.interval,
-  );
+  factory Trip.fromProto(int feedId, String gtfsId, gtfs.Trip proto, Trip? old) {
+    final departures = <JustTime?>[];
+    JustTime lastNotNull = JustTime(0, 0, 0);
+    for (final d in proto.departures) {
+      if (d == 0)
+        departures.add(null);
+      else {
+        lastNotNull = lastNotNull.plusSeconds((d - 1) * 5);
+        departures.add(lastNotNull);
+      }
+    }
+
+    return Trip(
+      id: FeedId(feedId, proto.tripId),
+      gtfsId: gtfsId,
+      itineraryId: proto.itineraryId,
+      serviceId: proto.serviceId.nullIfZero ?? old!.serviceId,
+      name: proto.shortName.nullIfEmpty ?? old?.name,
+      wheelchair: Stop.kAccessibilityFromProto[proto.wheelchair]!,
+      bikes: Stop.kAccessibilityFromProto[proto.bikes]!,
+      approximate: proto.approximate,
+      departures: departures,
+      arrivals: departures.indexed
+          .map((idxDep) => idxDep.$2?.minusSeconds(idxDep.$1 >= proto.arrivals.length ? 0 : proto.arrivals[idxDep.$1]))
+          .toList(),
+      startTime: proto.startTime == 0 ? old?.startTime : JustTime.fromInt(proto.startTime * 10),
+      endTime: proto.endTime == 0 ? old?.endTime : JustTime.fromInt(proto.endTime * 10),
+      interval: proto.interval.nullIfZero ?? old?.interval,
+    );
+  }
 
   @override
-  bool operator ==(Object other) =>
-      other is Trip && other.id == id && other.gtfsId == gtfsId;
+  bool operator ==(Object other) => other is Trip && other.id == id && other.gtfsId == gtfsId;
 
   @override
   int get hashCode => Object.hash(id, gtfsId);

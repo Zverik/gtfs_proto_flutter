@@ -11,7 +11,7 @@ class TripQueries {
   Future<Trip?> getById(FeedId tripId) async => await queryById(await _database.database, tripId);
 
   static Future<Trip?> queryById(DatabaseExecutor db, FeedId tripId) async {
-    final results = await db.rawQuery('select * from ${Trip.kTable.name} where feed_id = ? and route_id = ?', [
+    final results = await db.rawQuery('select * from ${Trip.kTable.name} where feed_id = ? and trip_id = ?', [
       tripId.feedId,
       tripId.id,
     ]);

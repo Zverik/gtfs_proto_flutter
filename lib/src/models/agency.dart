@@ -65,9 +65,9 @@ class Agency {
     'email': email,
   };
 
-  factory Agency.fromProto(int feedId, String gtfsId, gtfs.Agency proto, Agency? old) => Agency(
+  factory Agency.fromProto(int feedId, String? gtfsId, gtfs.Agency proto, Agency? old) => Agency(
     id: FeedId(feedId, proto.agencyId),
-    gtfsId: gtfsId,
+    gtfsId: gtfsId ?? old!.gtfsId,
     name: proto.name.nullIfEmpty ?? old!.name,
     url: proto.url.nullIfEmpty ?? old?.url,
     timezone: proto.timezone.nullIfEmpty ?? old?.timezone,

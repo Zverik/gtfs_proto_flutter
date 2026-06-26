@@ -10,6 +10,8 @@ import 'package:gtfs_proto_flutter/src/models.dart' as m;
 import 'package:gtfs_proto_flutter/src/queries/agency.dart';
 import 'package:gtfs_proto_flutter/src/queries/itinerary.dart';
 import 'package:gtfs_proto_flutter/src/queries/route.dart';
+import 'package:gtfs_proto_flutter/src/queries/service.dart';
+import 'package:gtfs_proto_flutter/src/queries/shape.dart';
 import 'package:gtfs_proto_flutter/src/queries/stop.dart';
 import 'package:gtfs_proto_flutter/src/queries/trip.dart';
 import 'package:latlong2/latlong.dart';
@@ -234,7 +236,7 @@ class ProtoLoader {
     for (final agency in agencies.agencies) {
       agencyIds.add(agency.agencyId);
       final lastAgency = isDelta ? await AgencyQueries.queryById(txn, FeedId(feedId, agency.agencyId)) : null;
-      final dbAgency = m.Agency.fromProto(feedId, gtfsIds[agency.agencyId], agency, lastAgency);
+      final dbAgency = m.Agency.fromProto(feedId, gtfsIds.elementAtOrNull(agency.agencyId), agency, lastAgency);
       batch.insert(m.Agency.kTable.name, dbAgency.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit();
@@ -264,7 +266,14 @@ class ProtoLoader {
           whereArgs: [feedId, service.serviceId],
         );
       } else {
-        final dbService = m.Service.fromProto(feedId, gtfsIds[service.serviceId], baseDate, service);
+        final lastService = isDelta ? await ServiceQueries.queryById(txn, FeedId(feedId, service.serviceId)) : null;
+        final dbService = m.Service.fromProto(
+          feedId,
+          gtfsIds.elementAtOrNull(service.serviceId),
+          baseDate,
+          service,
+          lastService,
+        );
         final algo = isDelta ? ConflictAlgorithm.replace : ConflictAlgorithm.rollback;
         batch.insert(m.Service.kTable.name, dbService.toJson(), conflictAlgorithm: algo);
       }
@@ -283,7 +292,8 @@ class ProtoLoader {
         }
         batch.delete(m.Shape.kTable.name, where: 'feed_id = ? and shape_id = ?', whereArgs: [feedId, shape.shapeId]);
       } else {
-        final dbShape = m.Shape.fromProto(feedId, gtfsIds[shape.shapeId], lastLoc, shape);
+        final lastShape = isDelta ? await ShapeQueries.queryById(txn, FeedId(feedId, shape.shapeId)) : null;
+        final dbShape = m.Shape.fromProto(feedId, gtfsIds.elementAtOrNull(shape.shapeId), lastLoc, shape, lastShape);
         lastLoc = dbShape.path.last;
         final algo = isDelta ? ConflictAlgorithm.replace : ConflictAlgorithm.rollback;
         batch.insert(m.Shape.kTable.name, dbShape.toJson(), conflictAlgorithm: algo);
@@ -311,7 +321,7 @@ class ProtoLoader {
         batch.delete(m.Stop.kTable.name, where: 'feed_id = ? and stop_id = ?', whereArgs: [feedId, stop.stopId]);
       } else {
         final lastStop = isDelta ? await StopQueries.queryById(txn, FeedId(feedId, stop.stopId)) : null;
-        final dbStop = m.Stop.fromProto(feedId, gtfsIds[stop.stopId], strings, lastLoc, stop, lastStop);
+        final dbStop = m.Stop.fromProto(feedId, gtfsIds.elementAtOrNull(stop.stopId), strings, lastLoc, stop, lastStop);
         if (stop.lon != 0 || stop.lat != 0) lastLoc = dbStop.location;
         final algo = isDelta ? ConflictAlgorithm.replace : ConflictAlgorithm.rollback;
         batch.insert(m.Stop.kTable.name, dbStop.toJson(), conflictAlgorithm: algo);
@@ -343,7 +353,14 @@ class ProtoLoader {
         batch.delete(m.Route.kTable.name, where: 'feed_id = ? and route_id = ?', whereArgs: [feedId, route.routeId]);
       } else {
         final lastRoute = isDelta ? await RouteQueries.queryById(txn, FeedId(feedId, route.routeId)) : null;
-        final dbRoute = m.Route.fromProto(feedId, gtfsIds[route.routeId], agencyId, strings, route, lastRoute);
+        final dbRoute = m.Route.fromProto(
+          feedId,
+          gtfsIds.elementAtOrNull(route.routeId),
+          agencyId,
+          strings,
+          route,
+          lastRoute,
+        );
         final algo = isDelta ? ConflictAlgorithm.replace : ConflictAlgorithm.rollback;
         batch.insert(m.Route.kTable.name, dbRoute.toJson(), conflictAlgorithm: algo);
       }
@@ -406,8 +423,9 @@ class ProtoLoader {
         }
         batch.delete(m.Trip.kTable.name, where: 'feed_id = ? and trip_id = ?', whereArgs: [feedId, trip.tripId]);
       } else {
+        // TODO: batch query previous objects
         final lastTrip = isDelta ? await TripQueries.queryById(txn, FeedId(feedId, trip.tripId)) : null;
-        final dbTrip = m.Trip.fromProto(feedId, gtfsIds[trip.tripId], trip, lastTrip);
+        final dbTrip = m.Trip.fromProto(feedId, gtfsIds.elementAtOrNull(trip.tripId), trip, lastTrip);
         final algo = isDelta ? ConflictAlgorithm.replace : ConflictAlgorithm.rollback;
         batch.insert(m.Trip.kTable.name, dbTrip.toJson(), conflictAlgorithm: algo);
       }

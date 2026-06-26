@@ -136,14 +136,14 @@ class Route {
 
   factory Route.fromProto(
     int feedId,
-    String gtfsId,
+    String? gtfsId,
     int? agencyId,
     List<String> strings,
     gtfs.Route proto,
     Route? old,
   ) => Route(
     id: FeedId(feedId, proto.routeId),
-    gtfsId: gtfsId,
+    gtfsId: gtfsId ?? old!.gtfsId,
     agencyId: proto.agencyId == 0 ? agencyId! : proto.agencyId,
     shortName: proto.shortName.nullIfEmpty ?? old?.shortName,
     longName: proto.longName.isNotEmpty

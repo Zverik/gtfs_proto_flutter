@@ -8,37 +8,26 @@ import 'package:latlong2/latlong.dart';
 
 class Shape {
   final FeedId id;
-  final String originalId;
+  final String gtfsId;
   final List<LatLng> path;
 
-  Shape({required this.id, required this.originalId, required this.path});
+  Shape({required this.id, required this.gtfsId, required this.path});
 
-  static const kTable = TableMetadata(
-    name: 'shapes',
-    key: 'shape_id',
-    columns: ['gtfs_shape_id text', 'path text'],
-  );
+  static const kTable = TableMetadata(name: 'shapes', key: 'shape_id', columns: ['gtfs_shape_id text', 'path text']);
 
   factory Shape.fromJson(Map<String, dynamic> data) => Shape(
     id: kTable.readId(data),
-    originalId: data['gtfs_shape_id'],
-    path: (json.decode(data['path']) as List<List<double>>)
-        .map((ll) => LatLng(ll[0], ll[1]))
-        .toList(),
+    gtfsId: data['gtfs_shape_id'],
+    path: (json.decode(data['path']) as List<List<double>>).map((ll) => LatLng(ll[0], ll[1])).toList(),
   );
 
   Map<String, dynamic> toJson() => {
     ...kTable.writeId(id),
-    'gtfs_shape_id': originalId,
+    'gtfs_shape_id': gtfsId,
     'path': json.encode(path.map((ll) => [ll.latitude, ll.longitude]).toList()),
   };
 
-  factory Shape.fromProto(
-    int feedId,
-    String originalId,
-    LatLng lastLoc,
-    gtfs.Shape proto,
-  ) {
+  factory Shape.fromProto(int feedId, String? gtfsId, LatLng lastLoc, gtfs.Shape proto, Shape? old) {
     const protoScale = 100000.0;
     final lats = proto.latitudes
         .rollingMap(lastLoc.latitude * protoScale, (p, c) => p + c)
@@ -50,15 +39,14 @@ class Shape {
         .toList();
     return Shape(
       id: FeedId(feedId, proto.shapeId),
-      originalId: originalId,
+      gtfsId: gtfsId ?? old!.gtfsId,
       path: List.generate(lats.length, (i) => LatLng(lats[i], lons[i])),
     );
   }
 
   @override
-  bool operator ==(Object other) =>
-      other is Shape && other.id == id && other.originalId == originalId;
+  bool operator ==(Object other) => other is Shape && other.id == id && other.gtfsId == gtfsId;
 
   @override
-  int get hashCode => Object.hash(id, originalId);
+  int get hashCode => Object.hash(id, gtfsId);
 }

@@ -6,7 +6,7 @@ import 'package:gtfs_proto_flutter/src/helpers/just_date.dart';
 
 class Service {
   final FeedId id;
-  final String originalId;
+  final String gtfsId;
   final JustDate? start;
   final JustDate? end;
   final List<bool> weekdays;
@@ -15,7 +15,7 @@ class Service {
 
   Service({
     required this.id,
-    required this.originalId,
+    required this.gtfsId,
     this.start,
     this.end,
     int weekdays = 127,
@@ -49,7 +49,7 @@ class Service {
 
   factory Service.fromJson(Map<String, dynamic> data) => Service(
     id: kTable.readId(data),
-    originalId: data['gtfs_service_id'],
+    gtfsId: data['gtfs_service_id'],
     start: JustDate.fromInt(data['start_date']),
     end: JustDate.fromInt(data['end_date']),
     weekdays: data['weekdays'],
@@ -66,15 +66,11 @@ class Service {
   );
 
   Map<String, dynamic> toJson() {
-    final outerStart = (added.union(
-      removed,
-    )).fold(start ?? added.first, (v, next) => next < v ? next : v);
-    final outerEnd = (added.union(
-      removed,
-    )).fold(end ?? added.first, (v, next) => next > v ? next : v);
+    final outerStart = (added.union(removed)).fold(start ?? added.first, (v, next) => next < v ? next : v);
+    final outerEnd = (added.union(removed)).fold(end ?? added.first, (v, next) => next > v ? next : v);
     return {
       ...kTable.writeId(id),
-      'gtfs_service_id': originalId,
+      'gtfs_service_id': gtfsId,
       'start_date': start?.toInt(),
       'end_date': end?.toInt(),
       'weekdays': serializeWeekdays(),
@@ -85,27 +81,17 @@ class Service {
     };
   }
 
-  factory Service.fromProto(
-    int feedId,
-    String originalId,
-    JustDate baseDate,
-    gtfs.Service proto,
-  ) => Service(
+  factory Service.fromProto(int feedId, String? gtfsId, JustDate baseDate, gtfs.Service proto, Service? old) => Service(
     id: FeedId(feedId, proto.serviceId),
-    originalId: originalId,
+    gtfsId: gtfsId ?? old!.gtfsId,
     start: proto.startDate == 0 ? null : baseDate.plusDays(proto.startDate),
     end: proto.endDate == 0 ? null : baseDate.plusDays(proto.endDate),
     weekdays: proto.weekdays,
-    added: proto.addedDays
-        .rollingMap(baseDate, (prev, int cur) => prev.plusDays(cur))
-        .toSet(),
-    removed: proto.removedDays
-        .rollingMap(baseDate, (prev, int cur) => prev.plusDays(cur))
-        .toSet(),
+    added: proto.addedDays.rollingMap(baseDate, (prev, int cur) => prev.plusDays(cur)).toSet(),
+    removed: proto.removedDays.rollingMap(baseDate, (prev, int cur) => prev.plusDays(cur)).toSet(),
   );
 
-  static List<bool> _parseWeekdays(int value) =>
-      List.generate(7, (i) => value & (2 << i) != 0);
+  static List<bool> _parseWeekdays(int value) => List.generate(7, (i) => value & (2 << i) != 0);
 
   int serializeWeekdays() {
     int result = 0;
@@ -116,11 +102,10 @@ class Service {
   }
 
   @override
-  bool operator ==(Object other) =>
-      other is Service && other.id == id && other.originalId == originalId;
+  bool operator ==(Object other) => other is Service && other.id == id && other.gtfsId == gtfsId;
 
   @override
-  int get hashCode => Object.hash(id, originalId);
+  int get hashCode => Object.hash(id, gtfsId);
 }
 
 class DateServices {
@@ -136,22 +121,13 @@ class DateServices {
     isManyToMany: true,
   );
 
-  factory DateServices.fromJson(Map<String, dynamic> data) => DateServices(
-    date: JustDate.fromInt(data['date']),
-    serviceId: FeedId(data['feed_id'], data['service_id']),
-  );
+  factory DateServices.fromJson(Map<String, dynamic> data) =>
+      DateServices(date: JustDate.fromInt(data['date']), serviceId: FeedId(data['feed_id'], data['service_id']));
 
-  Map<String, dynamic> toJson() => {
-    'date': date.toInt(),
-    'feed_id': serviceId.feedId,
-    'service_id': serviceId.id,
-  };
+  Map<String, dynamic> toJson() => {'date': date.toInt(), 'feed_id': serviceId.feedId, 'service_id': serviceId.id};
 
   @override
-  bool operator ==(Object other) =>
-      other is DateServices &&
-      other.date == date &&
-      other.serviceId == serviceId;
+  bool operator ==(Object other) => other is DateServices && other.date == date && other.serviceId == serviceId;
 
   @override
   int get hashCode => Object.hash(date, serviceId);

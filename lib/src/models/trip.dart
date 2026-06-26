@@ -4,7 +4,6 @@ import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
 import 'package:gtfs_proto_flutter/src/database/table_metadata.dart';
 import 'package:gtfs_proto_flutter/src/helpers/just_time.dart';
 import 'package:gtfs_proto_flutter/src/helpers/null_if_empty.dart';
-import 'package:gtfs_proto_flutter/src/helpers/rolling_map.dart';
 import 'package:gtfs_proto_flutter/src/models/arrival.dart';
 import 'package:gtfs_proto_flutter/src/models/stop.dart';
 import 'package:gtfs_proto_flutter/src/proto/gtfs.pb.dart' as gtfs;
@@ -121,7 +120,7 @@ class Trip {
     'last_departure': _getLastDeparture().toInt(),
   };
 
-  factory Trip.fromProto(int feedId, String gtfsId, gtfs.Trip proto, Trip? old) {
+  factory Trip.fromProto(int feedId, String? gtfsId, gtfs.Trip proto, Trip? old) {
     final departures = <JustTime?>[];
     JustTime lastNotNull = JustTime(0, 0, 0);
     for (final d in proto.departures) {
@@ -135,7 +134,7 @@ class Trip {
 
     return Trip(
       id: FeedId(feedId, proto.tripId),
-      gtfsId: gtfsId,
+      gtfsId: gtfsId ?? old!.gtfsId,
       itineraryId: proto.itineraryId,
       serviceId: proto.serviceId.nullIfZero ?? old!.serviceId,
       name: proto.shortName.nullIfEmpty ?? old?.name,

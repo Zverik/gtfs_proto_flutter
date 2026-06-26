@@ -4,6 +4,7 @@ import 'package:gtfs_proto_flutter/src/queries/feed.dart';
 import 'package:gtfs_proto_flutter/src/queries/itinerary.dart';
 import 'package:gtfs_proto_flutter/src/queries/route.dart';
 import 'package:gtfs_proto_flutter/src/queries/service.dart';
+import 'package:gtfs_proto_flutter/src/queries/shape.dart';
 import 'package:gtfs_proto_flutter/src/queries/stop.dart';
 import 'package:gtfs_proto_flutter/src/queries/trip.dart';
 
@@ -13,6 +14,7 @@ class Queries {
   final ItineraryQueries itineraries;
   final RouteQueries routes;
   final ServiceQueries services;
+  final ShapeQueries shapes;
   final StopQueries stops;
   final TripQueries trips;
 
@@ -23,5 +25,6 @@ class Queries {
       trips = TripQueries(database),
       agencies = AgencyQueries(database),
       itineraries = ItineraryQueries(database),
-      services = ServiceQueries(database);
+      services = ServiceQueries(database),
+      shapes = ShapeQueries(database);
 }

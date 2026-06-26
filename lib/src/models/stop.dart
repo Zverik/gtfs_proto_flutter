@@ -112,23 +112,29 @@ class Stop {
     gtfs.Accessibility.A_NO: Accessibility.no,
   };
 
-  factory Stop.fromProto(int feedId, String gtfsId, List<String> strings, LatLng lastLoc, gtfs.Stop proto, Stop? old) =>
-      Stop(
-        id: FeedId(feedId, proto.stopId),
-        gtfsId: gtfsId,
-        code: proto.code.nullIfEmpty ?? old?.code,
-        name: (proto.name == 0 ? null : strings[proto.name]) ?? old?.name,
-        location: proto.lat == 0 && proto.lon == 0
-            ? old!.location
-            : LatLng(lastLoc.latitude + proto.lat / 100000.0, lastLoc.longitude + proto.lon / 100000.0),
-        description: proto.desc.nullIfEmpty ?? old?.description,
-        type: kLocationFromProto[proto.type]!,
-        accessibility: kAccessibilityFromProto[proto.wheelchair]!,
-        parentStopId: proto.parentId.nullIfZero ?? old?.parentStopId,
-        platform: proto.platformCode.nullIfEmpty ?? old?.platform,
-        zoneId: proto.zone.nullIfZero ?? old?.zoneId,
-        areaIds: proto.areas.isNotEmpty ? List.of(proto.areas) : (old?.areaIds ?? []),
-      );
+  factory Stop.fromProto(
+    int feedId,
+    String? gtfsId,
+    List<String> strings,
+    LatLng lastLoc,
+    gtfs.Stop proto,
+    Stop? old,
+  ) => Stop(
+    id: FeedId(feedId, proto.stopId),
+    gtfsId: gtfsId ?? old!.gtfsId,
+    code: proto.code.nullIfEmpty ?? old?.code,
+    name: (proto.name == 0 ? null : strings[proto.name]) ?? old?.name,
+    location: proto.lat == 0 && proto.lon == 0
+        ? old!.location
+        : LatLng(lastLoc.latitude + proto.lat / 100000.0, lastLoc.longitude + proto.lon / 100000.0),
+    description: proto.desc.nullIfEmpty ?? old?.description,
+    type: kLocationFromProto[proto.type]!,
+    accessibility: kAccessibilityFromProto[proto.wheelchair]!,
+    parentStopId: proto.parentId.nullIfZero ?? old?.parentStopId,
+    platform: proto.platformCode.nullIfEmpty ?? old?.platform,
+    zoneId: proto.zone.nullIfZero ?? old?.zoneId,
+    areaIds: proto.areas.isNotEmpty ? List.of(proto.areas) : (old?.areaIds ?? []),
+  );
 
   @override
   bool operator ==(Object other) => other is Stop && other.id == id && other.gtfsId == gtfsId;

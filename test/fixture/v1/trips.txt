@@ -4,6 +4,6 @@ bus2,ROUTE1,weekends,Back,,dontcare,2
 bus3,ROUTE1,weekends,There,jaanireis,dontcare,2
 bus4,ROUTE1,weekends,Back,,dontcare,2
 bus5,ROUTE1,jaanipaev,There,jaanireis,dontcare,2
-tram_work,ROUTE2,workdays,,,dontcare,1
+tram_work,ROUTE2,workdays,Airport,,dontcare,1
 tram_work2,ROUTE2,workdays,Depot,,dontcare,1
-tram_week,ROUTE2,weekends,Airport,,dontcare,1
+tram_week,ROUTE2,weekends,,,dontcare,1

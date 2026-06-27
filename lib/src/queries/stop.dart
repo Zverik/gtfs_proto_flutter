@@ -29,6 +29,15 @@ class StopQueries {
     return results.isEmpty ? null : Stop.fromJson(results.first);
   }
 
+  Future<Stop?> getByGtfsId(String feedName, String gtfsId) async {
+    final db = await _database.database;
+    final results = await db.rawQuery(
+      'select * from ${Stop.kTable.name} left join ${Feed.kTable.name} using (feed_id) where feed_name = ? and stop_gtfs_id = ?',
+      [feedName, gtfsId],
+    );
+    return results.isEmpty ? null : Stop.fromJson(results.first);
+  }
+
   Future<List<Stop>> getAllStops(String feedName) async {
     final db = await _database.database;
     final results = await db.rawQuery(

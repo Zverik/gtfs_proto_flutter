@@ -1,5 +1,6 @@
 import 'package:gtfs_proto_flutter/src/database/database.dart';
 import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
+import 'package:gtfs_proto_flutter/src/models/feed.dart';
 import 'package:gtfs_proto_flutter/src/models/route.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -15,6 +16,15 @@ class RouteQueries {
       routeId.feedId,
       routeId.id,
     ]);
+    return results.isEmpty ? null : Route.fromJson(results.first);
+  }
+
+  Future<Route?> getByGtfsId(String feedName, String gtfsId) async {
+    final db = await _database.database;
+    final results = await db.rawQuery(
+      'select * from ${Route.kTable.name} left join ${Feed.kTable.name} using (feed_id) where feed_name = ? and route_gtfs_id = ?',
+      [feedName, gtfsId],
+    );
     return results.isEmpty ? null : Route.fromJson(results.first);
   }
 }

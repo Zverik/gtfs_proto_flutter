@@ -53,22 +53,6 @@ class GtfsProto {
         ),
       );
 
-  /// Finds a list of serviceIds for a given date. It needs to be cached to query
-  /// arrivals and trips.
-  Future<List<FeedId>> findServiceIds(DateTime dateTime) async {
-    final now = JustDate.fromDateTime(dateTime);
-    final db = await _database.database;
-    final results = await db.rawQuery(
-      'select * from ${Service.kTable.name} where outer_start <= ? and outer_end >= ?',
-      [now.toInt(), now.toInt()],
-    );
-    return results
-        .map((row) => Service.fromJson(row))
-        .where((s) => s.matches(now))
-        .map((s) => s.id)
-        .toList();
-  }
-
   Future<List<Arrival>> findArrivals({
     required FeedId stopId,
     DateTime? now,
@@ -77,12 +61,12 @@ class GtfsProto {
     int beforeSeconds = 0,
     int afterSeconds = 3600,
   }) async {
-    final db = await _database.database;
     now ??= DateTime.now();
-    serviceIds ??= await findServiceIds(now);
+    serviceIds ??= await queries.services.queryByDate(JustDate.fromDateTime(now));
     final time = JustTime.fromDateTime(now).toInt();
 
     // 1. Query all trips that _might_ fit based on the date and the stop and the time.
+    final db = await _database.database;
     final placeholders = List.generate(serviceIds.length, (i) => '?').join(',');
     final results = await db.rawQuery(
       'select * from ${ItineraryStopRef.kTable.name} left join ${Trip.kTable.name} using (feed_id, itinerary_id) '

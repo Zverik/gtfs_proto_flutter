@@ -30,7 +30,7 @@ enum PickupDropoff { yes, no, phoneAgency, tellDriver }
 class Route {
   final FeedId id;
   final String gtfsId;
-  final int agencyId;
+  final FeedId agencyId;
   final String? shortName;
   final String? longName;
   final String? description;
@@ -63,7 +63,7 @@ class Route {
     name: 'routes',
     key: 'route_id',
     columns: [
-      'gtfs_route_id text',
+      'route_gtfs_id text',
       'agency_id integer',
       'short_name text',
       'long_name text',
@@ -79,8 +79,8 @@ class Route {
 
   factory Route.fromJson(Map<String, dynamic> data) => Route(
     id: kTable.readId(data),
-    gtfsId: data['gtfs_route_id'],
-    agencyId: data['agency_id'],
+    gtfsId: data['route_gtfs_id'],
+    agencyId: FeedId.fromJson(data, 'agency_id'),
     shortName: data['short_name'],
     longName: data['long_name'],
     description: data['route_desc'],
@@ -94,8 +94,8 @@ class Route {
 
   Map<String, dynamic> toJson() => {
     ...kTable.writeId(id),
-    'gtfs_route_id': gtfsId,
-    'agency_id': agencyId,
+    'route_gtfs_id': gtfsId,
+    'agency_id': agencyId.id,
     'short_name': shortName,
     'long_name': longName,
     'route_desc': description,
@@ -144,7 +144,7 @@ class Route {
   ) => Route(
     id: FeedId(feedId, proto.routeId),
     gtfsId: gtfsId ?? old!.gtfsId,
-    agencyId: proto.agencyId == 0 ? agencyId! : proto.agencyId,
+    agencyId: FeedId(feedId, proto.agencyId == 0 ? agencyId! : proto.agencyId),
     shortName: proto.shortName.nullIfEmpty ?? old?.shortName,
     longName: proto.longName.isNotEmpty
         ? proto.longName.map((idx) => strings[idx]).join(' — ').nullIfEmpty

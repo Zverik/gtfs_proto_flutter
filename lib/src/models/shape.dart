@@ -13,17 +13,17 @@ class Shape {
 
   Shape({required this.id, required this.gtfsId, required this.path});
 
-  static const kTable = TableMetadata(name: 'shapes', key: 'shape_id', columns: ['gtfs_shape_id text', 'path text']);
+  static const kTable = TableMetadata(name: 'shapes', key: 'shape_id', columns: ['shape_gtfs_id text', 'path text']);
 
   factory Shape.fromJson(Map<String, dynamic> data) => Shape(
     id: kTable.readId(data),
-    gtfsId: data['gtfs_shape_id'],
-    path: (json.decode(data['path']) as List<List<double>>).map((ll) => LatLng(ll[0], ll[1])).toList(),
+    gtfsId: data['shape_gtfs_id'],
+    path: (json.decode(data['path']) as List<dynamic>).cast<List<dynamic>>().map((ll) => LatLng(ll[0], ll[1])).toList(),
   );
 
   Map<String, dynamic> toJson() => {
     ...kTable.writeId(id),
-    'gtfs_shape_id': gtfsId,
+    'shape_gtfs_id': gtfsId,
     'path': json.encode(path.map((ll) => [ll.latitude, ll.longitude]).toList()),
   };
 

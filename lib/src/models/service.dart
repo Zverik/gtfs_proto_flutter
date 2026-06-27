@@ -35,7 +35,7 @@ class Service {
     name: 'services',
     key: 'service_id',
     columns: [
-      'gtfs_service_id text',
+      'service_gtfs_id text',
       'start_date integer',
       'end_date integer',
       'weekdays integer',
@@ -49,9 +49,9 @@ class Service {
 
   factory Service.fromJson(Map<String, dynamic> data) => Service(
     id: kTable.readId(data),
-    gtfsId: data['gtfs_service_id'],
-    start: JustDate.fromInt(data['start_date']),
-    end: JustDate.fromInt(data['end_date']),
+    gtfsId: data['service_gtfs_id'],
+    start: data['start_date'] == null ? null : JustDate.fromInt(data['start_date']),
+    end: data['end_date'] == null ? null : JustDate.fromInt(data['end_date']),
     weekdays: data['weekdays'],
     added: (data['added'] as String? ?? '')
         .split(",")
@@ -70,7 +70,7 @@ class Service {
     final outerEnd = (added.union(removed)).fold(end ?? added.first, (v, next) => next > v ? next : v);
     return {
       ...kTable.writeId(id),
-      'gtfs_service_id': gtfsId,
+      'service_gtfs_id': gtfsId,
       'start_date': start?.toInt(),
       'end_date': end?.toInt(),
       'weekdays': serializeWeekdays(),
@@ -91,12 +91,12 @@ class Service {
     removed: proto.removedDays.rollingMap(baseDate, (prev, int cur) => prev.plusDays(cur)).toSet(),
   );
 
-  static List<bool> _parseWeekdays(int value) => List.generate(7, (i) => value & (2 << i) != 0);
+  static List<bool> _parseWeekdays(int value) => List.generate(7, (i) => value & (1 << i) != 0);
 
   int serializeWeekdays() {
     int result = 0;
     for (int i = 0; i < 7; i++) {
-      if (weekdays[i]) result += 2 << i;
+      if (weekdays[i]) result += 1 << i;
     }
     return result;
   }

@@ -42,7 +42,7 @@ class Stop {
     name: 'stops',
     key: 'stop_id',
     columns: [
-      'original_id text',
+      'stop_gtfs_id text',
       'stop_code text',
       'stop_name text',
       'lat integer',
@@ -64,7 +64,7 @@ class Stop {
 
   factory Stop.fromJson(Map<String, dynamic> data) => Stop(
     id: kTable.readId(data),
-    gtfsId: data['original_id'],
+    gtfsId: data['stop_gtfs_id'],
     code: data['stop_code'],
     name: data['stop_name'],
     location: LatLng(data['lat'] / kCoordPrecision, data['lon'] / kCoordPrecision),
@@ -83,7 +83,7 @@ class Stop {
 
   Map<String, dynamic> toJson() => {
     ...kTable.writeId(id),
-    'original_id': gtfsId,
+    'stop_gtfs_id': gtfsId,
     'stop_code': code,
     'stop_name': name,
     'lat': (location.latitude * kCoordPrecision).round(),

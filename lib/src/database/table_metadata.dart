@@ -28,14 +28,10 @@ class TableMetadata {
   });
 
   /// Parses the two id fields, provided [key] is defined.
-  FeedId readId(Map<String, dynamic> data) =>
-      FeedId(data['feed_id'], data[key!]);
+  FeedId readId(Map<String, dynamic> data) => FeedId.fromJson(data, key!);
 
   /// Fills the two JSON fields with ids, provided [key] is defined.
-  Map<String, dynamic> writeId(FeedId id) => {
-    'feed_id': id.feedId,
-    key!: id.id,
-  };
+  Map<String, dynamic> writeId(FeedId id) => {'feed_id': id.feedId, key!: id.id};
 
   String createSql() {
     final myColumns = List.of(columns);
@@ -53,13 +49,8 @@ class TableMetadata {
     for (String column in indexes) {
       final unique = column.startsWith('!') ? 'unique' : '';
       if (unique.isNotEmpty) column = column.substring(1);
-      final indexName = column
-          .split(",")
-          .map((s) => s.trim().toLowerCase())
-          .join('_');
-      result.add(
-        "create $unique index ${name}_$indexName on $name ($column)",
-      );
+      final indexName = column.split(",").map((s) => s.trim().toLowerCase()).join('_');
+      result.add("create $unique index ${name}_$indexName on $name ($column)");
     }
     return result;
   }

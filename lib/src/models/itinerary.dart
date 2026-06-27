@@ -26,8 +26,8 @@ class ItineraryStop {
 
 class Itinerary {
   final FeedId id;
-  final int routeId;
-  final int? shapeId;
+  final FeedId routeId;
+  final FeedId? shapeId;
   final bool oppositeDirection;
   final List<ItineraryStop> stops;
 
@@ -47,16 +47,16 @@ class Itinerary {
 
   factory Itinerary.fromJson(Map<String, dynamic> data) => Itinerary(
     id: kTable.readId(data),
-    routeId: data['route_id'],
-    shapeId: data['shape_id'],
+    routeId: FeedId.fromJson(data, 'route_id'),
+    shapeId: data['shape_id'] == null ? null : FeedId.fromJson(data, 'shape_id'),
     oppositeDirection: data['opposite'] == 1,
     stops: (json.decode(data['stops']) as List<dynamic>).map((s) => ItineraryStop.fromJson(s)).toList(),
   );
 
   Map<String, dynamic> toJson() => {
     ...kTable.writeId(id),
-    'route_id': routeId,
-    'shape_id': shapeId,
+    'route_id': routeId.id,
+    'shape_id': shapeId?.id,
     'opposite': oppositeDirection ? 1 : 0,
     'stops': json.encode(stops.map((s) => s.toJson()).toList()),
   };
@@ -73,8 +73,8 @@ class Itinerary {
     final dropoffs = proto.dropoffTypes.map((pd) => Route.kPickupDropoffFromProto[pd]!).toList();
     return Itinerary(
       id: FeedId(feedId, proto.itineraryId),
-      routeId: proto.routeId,
-      shapeId: proto.shapeId,
+      routeId: FeedId(feedId, proto.routeId),
+      shapeId: proto.shapeId == 0 ? old?.shapeId : FeedId(feedId, proto.shapeId),
       oppositeDirection: proto.oppositeDirection,
       stops: stops.indexed
           .map(

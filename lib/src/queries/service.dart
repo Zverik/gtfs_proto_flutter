@@ -1,5 +1,7 @@
 import 'package:gtfs_proto_flutter/src/database/database.dart';
 import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
+import 'package:gtfs_proto_flutter/src/helpers/just_date.dart';
+import 'package:gtfs_proto_flutter/src/models/feed.dart';
 import 'package:gtfs_proto_flutter/src/models/service.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -16,5 +18,29 @@ class ServiceQueries {
       serviceId.id,
     ]);
     return results.isEmpty ? null : Service.fromJson(results.first);
+  }
+
+  Future<Service?> getByGtfsId(String feedName, String gtfsId) async {
+    final db = await _database.database;
+    final results = await db.rawQuery(
+      'select * from ${Service.kTable.name} left join ${Feed.kTable.name} using (feed_id) where feed_name = ? and service_gtfs_id = ?',
+      [feedName, gtfsId],
+    );
+    return results.isEmpty ? null : Service.fromJson(results.first);
+  }
+
+  /// Finds a list of serviceIds for a given date. It needs to be cached to query
+  /// arrivals and trips. Returns results for all feeds.
+  Future<List<FeedId>> queryByDate(JustDate date) async {
+    final db = await _database.database;
+    final results = await db.rawQuery(
+      'select * from ${Service.kTable.name} where outer_start <= ? and outer_end >= ?',
+      [date.toInt(), date.toInt()],
+    );
+    return results
+        .map((row) => Service.fromJson(row))
+        .where((s) => s.matches(date))
+        .map((s) => s.id)
+        .toList();
   }
 }

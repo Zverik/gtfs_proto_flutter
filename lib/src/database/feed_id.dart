@@ -6,10 +6,14 @@ class FeedId {
 
   const FeedId(this.feedId, this.id);
 
+  factory FeedId.fromJson(Map<String, dynamic> data, String fieldName) => FeedId(data['feed_id'], data[fieldName]);
+
   @override
-  bool operator ==(Object other) =>
-      other is FeedId && other.feedId == feedId && other.id == id;
+  bool operator ==(Object other) => other is FeedId && other.feedId == feedId && other.id == id;
 
   @override
   int get hashCode => Object.hash(feedId, id);
+
+  @override
+  String toString() => 'FeedId($feedId, $id)';
 }

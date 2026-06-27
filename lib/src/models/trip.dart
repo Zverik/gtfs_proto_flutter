@@ -11,8 +11,8 @@ import 'package:gtfs_proto_flutter/src/proto/gtfs.pb.dart' as gtfs;
 class Trip {
   final FeedId id;
   final String gtfsId;
-  final int itineraryId;
-  final int serviceId;
+  final FeedId itineraryId;
+  final FeedId serviceId;
   final String? name;
   final Accessibility wheelchair;
   final Accessibility bikes;
@@ -48,7 +48,7 @@ class Trip {
     name: 'trips',
     key: 'trip_id',
     columns: [
-      'gtfs_trip_id text',
+      'trip_gtfs_id text',
       'itinerary_id integer',
       'service_id integer',
       'trip_name text',
@@ -68,9 +68,9 @@ class Trip {
 
   factory Trip.fromJson(Map<String, dynamic> data) => Trip(
     id: kTable.readId(data),
-    gtfsId: data['gtfs_trip_id'],
-    itineraryId: data['itinerary_id'],
-    serviceId: data['service_id'],
+    gtfsId: data['trip_gtfs_id'],
+    itineraryId: FeedId.fromJson(data, 'itinerary_id'),
+    serviceId: FeedId.fromJson(data, 'service_id'),
     name: data['trip_name'],
     wheelchair: Accessibility.values[data['wheelchair'] ?? 0],
     bikes: Accessibility.values[data['bikes'] ?? 0],
@@ -104,9 +104,9 @@ class Trip {
 
   Map<String, dynamic> toJson() => {
     ...kTable.writeId(id),
-    'gtfs_trip_id': gtfsId,
-    'itinerary_id': itineraryId,
-    'service_id': serviceId,
+    'trip_gtfs_id': gtfsId,
+    'itinerary_id': itineraryId.id,
+    'service_id': serviceId.id,
     'trip_name': name,
     'wheelchair': wheelchair.index,
     'bikes': bikes.index,
@@ -122,7 +122,7 @@ class Trip {
 
   factory Trip.fromProto(int feedId, String? gtfsId, gtfs.Trip proto, Trip? old) {
     final departures = <JustTime?>[];
-    JustTime lastNotNull = JustTime(0, 0, 0);
+    JustTime lastNotNull = JustTime(0, 0, 0).plusSeconds(5);
     for (final d in proto.departures) {
       if (d == 0)
         departures.add(null);
@@ -135,15 +135,15 @@ class Trip {
     return Trip(
       id: FeedId(feedId, proto.tripId),
       gtfsId: gtfsId ?? old!.gtfsId,
-      itineraryId: proto.itineraryId,
-      serviceId: proto.serviceId.nullIfZero ?? old!.serviceId,
+      itineraryId: FeedId(feedId, proto.itineraryId),
+      serviceId: FeedId(feedId, proto.serviceId.nullIfZero ?? old!.serviceId.id),
       name: proto.shortName.nullIfEmpty ?? old?.name,
       wheelchair: Stop.kAccessibilityFromProto[proto.wheelchair]!,
       bikes: Stop.kAccessibilityFromProto[proto.bikes]!,
       approximate: proto.approximate,
       departures: departures,
       arrivals: departures.indexed
-          .map((idxDep) => idxDep.$2?.minusSeconds(idxDep.$1 >= proto.arrivals.length ? 0 : proto.arrivals[idxDep.$1]))
+          .map((idxDep) => idxDep.$2?.minusSeconds(idxDep.$1 >= proto.arrivals.length ? 0 : proto.arrivals[idxDep.$1] * 5))
           .toList(),
       startTime: proto.startTime == 0 ? old?.startTime : JustTime.fromInt(proto.startTime * 10),
       endTime: proto.endTime == 0 ? old?.endTime : JustTime.fromInt(proto.endTime * 10),

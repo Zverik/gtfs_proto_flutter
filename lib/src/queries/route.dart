@@ -1,6 +1,7 @@
 import 'package:gtfs_proto_flutter/src/database/database.dart';
 import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
 import 'package:gtfs_proto_flutter/src/models/feed.dart';
+import 'package:gtfs_proto_flutter/src/models/itinerary.dart';
 import 'package:gtfs_proto_flutter/src/models/route.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -26,5 +27,17 @@ class RouteQueries {
       [feedName, gtfsId],
     );
     return results.isEmpty ? null : Route.fromJson(results.first);
+  }
+
+  Future<Set<Route>> getForStop(FeedId stopId) async {
+    final db = await _database.database;
+    final result = await db.rawQuery(
+      'select i.* from ${ItineraryStopRef.kTable.name} isr '
+      'left join ${Itinerary.kTable.name} i using (feed_id, itinerary_id) '
+      'left join ${Route.kTable.name} r using (feed_id, route_id) '
+      'where isr.feed_id = ? and isr.stop_id = ?',
+      [stopId.feedId, stopId.id],
+    );
+    return result.map((row) => Route.fromJson(row)).toSet();
   }
 }

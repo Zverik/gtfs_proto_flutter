@@ -91,7 +91,13 @@ class Itinerary {
 
   Iterable<ItineraryStopRef> toStopRefs() => List.generate(
     stops.length,
-    (i) => ItineraryStopRef(feedId: id.feedId, itineraryId: id.id, sequence: i, stopId: stops[i].stopId),
+    (i) => ItineraryStopRef(
+      feedId: id.feedId,
+      routeId: routeId.id,
+      itineraryId: id.id,
+      sequence: i,
+      stopId: stops[i].stopId,
+    ),
   );
 
   @override
@@ -104,21 +110,29 @@ class Itinerary {
 class ItineraryStopRef {
   final int feedId;
   final int stopId;
+  final int routeId;
   final int itineraryId;
   final int sequence;
 
-  ItineraryStopRef({required this.feedId, required this.stopId, required this.itineraryId, required this.sequence});
+  ItineraryStopRef({
+    required this.feedId,
+    required this.stopId,
+    required this.itineraryId,
+    required this.routeId,
+    required this.sequence,
+  });
 
   static const kTable = TableMetadata(
     name: 'itinerary_stops',
-    columns: ['feed_id integer', 'itinerary_id integer', 'stop_id integer', 'sequence integer'],
-    indexes: ['feed_id, stop_id'],
+    columns: ['feed_id integer', 'itinerary_id integer', 'route_id integer', 'stop_id integer', 'sequence integer'],
+    indexes: ['feed_id, stop_id', 'feed_id, route_id'],
     isManyToMany: true,
   );
 
   factory ItineraryStopRef.fromJson(Map<String, dynamic> data) => ItineraryStopRef(
     feedId: data['feed_id'],
     stopId: data['stop_id'],
+    routeId: data['route_id'],
     itineraryId: data['itinerary_id'],
     sequence: data['sequence'],
   );
@@ -126,6 +140,7 @@ class ItineraryStopRef {
   Map<String, dynamic> toJson() => {
     'feed_id': feedId,
     'stop_id': stopId,
+    'route_id': routeId,
     'itinerary_id': itineraryId,
     'sequence': sequence,
   };

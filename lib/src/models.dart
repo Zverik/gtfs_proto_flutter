@@ -1,3 +1,4 @@
+export 'database/feed_id.dart';
 export 'models/agency.dart';
 export 'models/area.dart';
 export 'models/arrival.dart';

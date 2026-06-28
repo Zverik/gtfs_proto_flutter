@@ -1,5 +1,7 @@
 service_id,date,exception_type
 workdays,20260623,2
 workdays,20260624,2
+weekends,20260623,1
+weekends,20260624,1
 jaanipaev,20260623,1
 jaanipaev,20260624,1

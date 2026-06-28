@@ -4,7 +4,6 @@ import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
 import 'package:gtfs_proto_flutter/src/database/table_metadata.dart';
 import 'package:gtfs_proto_flutter/src/helpers/just_time.dart';
 import 'package:gtfs_proto_flutter/src/helpers/null_if_empty.dart';
-import 'package:gtfs_proto_flutter/src/models/arrival.dart';
 import 'package:gtfs_proto_flutter/src/models/stop.dart';
 import 'package:gtfs_proto_flutter/src/proto/gtfs.pb.dart' as gtfs;
 
@@ -38,11 +37,6 @@ class Trip {
     this.endTime,
     this.interval,
   });
-
-  SpecificTripId specificTrip({required DateTime departure, int sequence = 0, bool liveDeparture = false}) {
-    // TODO: we know the exact time of departure for [sequence], need to get the first one.
-    return SpecificTripId(tripId: id, firstDeparture: departure, approximate: !liveDeparture);
-  }
 
   static const kTable = TableMetadata(
     name: 'trips',

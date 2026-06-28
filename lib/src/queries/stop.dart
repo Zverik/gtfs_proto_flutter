@@ -19,6 +19,21 @@ class StopQueries {
     return results.isEmpty ? null : Stop.fromJson(results.first);
   }
 
+  Future<Map<FeedId, Stop>> getByIds(Iterable<FeedId> stopIds) async {
+    final db = await _database.database;
+    final feedIds = stopIds.map((s) => s.feedId).toSet();
+    final feedPlaces = List.generate(feedIds.length, (i) => '?').join(',');
+    final stopPlaces = List.generate(stopIds.length, (i) => '?').join(',');
+    final results = await db.rawQuery(
+      'select * from ${Stop.kTable.name} where feed_id in ($feedPlaces) and stop_id in ($stopPlaces)',
+      [...feedIds, ...stopIds.map((s) => s.id)],
+    );
+    return {
+      for (final stop in results.map((row) => Stop.fromJson(row)))
+        if (stopIds.contains(stop.id)) stop.id: stop,
+    };
+  }
+
   Future<Stop?> getByCode(String feedName, String stopCode) async {
     final db = await _database.database;
     final results = await db.rawQuery(

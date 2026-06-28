@@ -1,11 +1,11 @@
 class JustTime implements Comparable<JustTime> {
-  static const kMaxValue = 24 * 3600;
+  static const kMaxValue = 30 * 3600; // up to 30:00:00 (which is 6:00:00 the next day).
 
   final int hour;
   final int minute;
   final int second;
 
-  const JustTime(this.hour, this.minute, this.second);
+  const JustTime(this.hour, this.minute, [this.second = 0]);
 
   factory JustTime.fromDateTime(DateTime dt) =>
       JustTime(dt.hour, dt.minute, dt.second);

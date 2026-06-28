@@ -37,10 +37,21 @@ class ServiceQueries {
       'select * from ${Service.kTable.name} where outer_start <= ? and outer_end >= ?',
       [date.toInt(), date.toInt()],
     );
-    return results
-        .map((row) => Service.fromJson(row))
-        .where((s) => s.matches(date))
-        .map((s) => s.id)
-        .toList();
+    return results.map((row) => Service.fromJson(row)).where((s) => s.matches(date)).map((s) => s.id).toList();
+  }
+
+  Future<void> confirmTodayServices(JustDate date) async {
+    final db = await _database.database;
+    final results = await db.rawQuery('select feed_id from ${DateServices.kTable.name} where date = ? limit 1', [
+      date.toInt(),
+    ]);
+    if (results.isNotEmpty) return;
+
+    final serviceIds = await queryByDate(date);
+    final batch = db.batch();
+    for (final id in serviceIds) {
+      batch.insert(DateServices.kTable.name, DateServices(date: date, serviceId: id).toJson());
+    }
+    await batch.commit();
   }
 }

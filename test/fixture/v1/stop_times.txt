@@ -22,9 +22,9 @@ bus5,stop4,4,,1,,12:20:00,12:20:00,0
 tram_work,stop5,1,,,1,6:00:00,6:00:00,1
 tram_work,stop6,2,Missing,,,6:10:00,6:10:30,0
 tram_work,stop7,3,,1,,6:30:00,6:30:00,0
-tram_work2,stop5,1,,,1,6:00:00,6:00:00,1
+tram_work2,stop7,1,,,1,6:00:00,6:00:00,1
 tram_work2,stop6,2,Missing,,,,,0
-tram_work2,stop7,3,,1,,6:30:00,6:30:00,0
+tram_work2,stop5,3,,1,,6:30:00,6:30:00,0
 tram_week,stop5,1,,,1,6:00:00,6:00:00,1
 tram_week,stop6,2,Missing,,,6:10:00,6:10:30,0
 tram_week,stop7,3,,1,,6:30:00,6:30:00,0

@@ -278,6 +278,7 @@ class ProtoLoader {
         batch.insert(m.Service.kTable.name, dbService.toJson(), conflictAlgorithm: algo);
       }
     }
+    batch.delete(m.DateServices.kTable.name);
     await batch.commit();
   }
 

@@ -54,20 +54,22 @@ void main() async {
   test('Schedule for a frequency-based route', () async {
     final tram = (await RouteQueries(helper).getByGtfsId('feed', 'ROUTE2'))?.id;
     expect(tram, isNotNull);
-    final deps1 = await arrivals.findDeparturesForDay(tram!, stops['stop5']!, JustDate(2026, 6, 26));
-    expect(deps1, hasLength(((19 - 12) * 3 + 1) * 2));
+    final deps1 = await arrivals.findDeparturesForDay(tram!, stops['stop5']!, JustDate(2026, 6, 27));
+    expect(deps1, hasLength((19 - 12) * 3 + 1));
     expect(deps1[1].departure, JustTime(12, 20));
-    expect(deps1.last.departure, JustTime(20, 10));
+    expect(deps1.last.departure, JustTime(19, 0));
 
-    final deps2 = await arrivals.findDeparturesForDay(tram, stops['stop5']!, JustDate(2026, 6, 27));
-    expect(deps2, hasLength(1));
+    final deps2 = await arrivals.findDeparturesForDay(tram, stops['stop5']!, JustDate(2026, 6, 26));
+    expect(deps2, hasLength(2));
     expect(deps2.first.frequency, Frequency(JustTime(12, 0), JustTime(19, 0), 1200));
   });
 
   test('Getting all context for a trip', () async {
     final trip = await TripQueries(helper).getByGtfsId('feed', 'bus3');
     expect(trip, isNotNull);
-    final specific = await arrivals.getSpecificTrip(SpecificTripId(tripId: trip!.id, departure: DateTime(2026, 6, 27, 6, 0, 0)));
+    final specific = await arrivals.getSpecificTrip(
+      SpecificTripId(tripId: trip!.id, departure: DateTime(2026, 6, 27, 6, 0, 0)),
+    );
     expect(specific, isNotNull);
     expect(specific!.name, 'jaanireis');
     expect(specific.route.name, 'B1');
@@ -81,7 +83,41 @@ void main() async {
     expect(stop2.headsign, 'There');
   });
 
-  test('Mixed arrivals', () async {
+  test('Arrivals for a time', () async {
+    final ar = await arrivals.findArrivals(stopId: stops['stop2']!, now: DateTime(2026, 6, 27, 11, 6, 0));
+    expect(ar, hasLength(2));
+    expect(ar.map((a) => a.stop.stop.name).toSet(), {'Stop 2'});
+    expect(ar.map((a) => a.trip.route.name), ['B1', 'B1']);
+    expect(ar.map((a) => a.trip.gtfsId), ['bus3', 'bus4']);
+    expect(ar.map((a) => a.stop.departure), [DateTime(2026, 6, 27, 11, 10), DateTime(2026, 6, 27, 11, 40)]);
+  });
+
+  test('Arrivals for a frequency', () async {
+    final ar2 = await arrivals.findArrivals(stopId: stops['stop7']!, now: DateTime(2026, 6, 26, 10, 6, 0));
+    expect(ar2, isEmpty);
+
+    final ar3 = await arrivals.findArrivals(stopId: stops['stop7']!, now: DateTime(2026, 6, 26, 11, 6, 0));
+    expect(ar3, hasLength(1));
+    expect(ar3.first.trip.frequencySeconds, 1200);
+    expect(ar3.first.interval, isTrue);
+
+    final ar4 = await arrivals.findArrivals(stopId: stops['stop7']!, now: DateTime(2026, 6, 26, 14, 6, 0));
+    expect(ar4, hasLength(2));
+    expect(ar4.map((a) => a.trip.frequencySeconds), [1200, 1200]);
+    expect(ar4.map((a) => a.interval), [true, true]);
+
+    // TODO this
+    /* final ar5 = await arrivals.findArrivals(stopId: stops['stop7']!, now: DateTime(2026, 6, 27, 14, 6, 0));
+    expect(ar5, hasLength(3));
+    expect(ar5.first.interval, isFalse);
+    expect(ar5.map((a) => a.stop.departure), [
+      DateTime(2026, 6, 27, 14, 20),
+      DateTime(2026, 6, 27, 14, 40),
+      DateTime(2026, 6, 27, 15, 0),
+    ]); */
+  });
+
+  test('Real-time adjusted arrivals', () async {
     // TODO
   });
 }

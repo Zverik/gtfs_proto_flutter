@@ -22,6 +22,10 @@ class TripStop {
     required this.pickup,
     required this.dropoff,
   });
+
+  @override
+  String toString() =>
+      'TripStop(stop=${stop.name ?? stop.code ?? stop.gtfsId}, headsign=$headsign, arrival=$arrival, departure=$departure)';
 }
 
 /// Additional data to a [tripId] to help construct the [SpecificTrip] instance.
@@ -42,6 +46,7 @@ class SpecificTripId {
 /// Contains unwrapped objects referring to a specific trip.
 class SpecificTrip {
   final FeedId tripId;
+  final String gtfsId;
   final Route route;
   final List<LatLng>? path;
   final String? name;
@@ -65,6 +70,7 @@ class SpecificTrip {
 
   SpecificTrip({
     required this.tripId,
+    required this.gtfsId,
     required this.route,
     this.path,
     this.name,
@@ -91,11 +97,21 @@ class SpecificTrip {
 }
 
 /// A [SpecificTrip] wrapper highlighting one specific stop.
-class Arrival {
+class Arrival implements Comparable<Arrival> {
   final SpecificTrip trip;
   final TripStop stop;
+  final bool interval;
 
-  Arrival(this.trip, int stopId) : stop = trip.stops.firstWhere((s) => s.stop.id.id == stopId);
+  Arrival(this.trip, int stopId)
+    : stop = trip.stops.firstWhere((s) => s.stop.id.id == stopId),
+      interval = trip.frequencySeconds != null;
+
+  @override
+  int compareTo(Arrival other) {
+    if (interval) return other.interval ? trip.frequencySeconds!.compareTo(other.trip.frequencySeconds!) : -1;
+    if (other.interval) return 1;
+    return stop.departure.compareTo(other.stop.departure);
+  }
 }
 
 extension TripToSpecific on Trip {
@@ -108,18 +124,23 @@ extension TripToSpecific on Trip {
   }) {
     return SpecificTrip(
       tripId: id,
+      gtfsId: gtfsId,
       route: route,
       path: shape?.path,
       name: name,
-      stops: itinerary.stops.indexed.map((stop) => TripStop(
-        stop: stops[FeedId(id.feedId, stop.$2.stopId)]!,
-        headsign: stop.$2.headsign,
-        // TODO: can be null, need to process it.
-        arrival: arrivals[stop.$1]!.toDateTime(date),
-        departure: departures[stop.$1]!.toDateTime(date),
-        pickup: stop.$2.pickup,
-        dropoff: stop.$2.dropoff,
-      )).toList(),
+      stops: itinerary.stops.indexed
+          .map(
+            (stop) => TripStop(
+              stop: stops[FeedId(id.feedId, stop.$2.stopId)]!,
+              headsign: stop.$2.headsign,
+              // TODO: can be null, need to process it.
+              arrival: (arrivals[stop.$1] ?? arrivals.first!).toDateTime(date),
+              departure: (departures[stop.$1] ?? departures.first!).toDateTime(date),
+              pickup: stop.$2.pickup,
+              dropoff: stop.$2.dropoff,
+            ),
+          )
+          .toList(),
       wheelchair: wheelchair,
       bikes: bikes,
       approximate: approximate,

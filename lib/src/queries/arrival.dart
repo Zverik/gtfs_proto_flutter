@@ -32,7 +32,7 @@ class ArrivalQueries {
       'left join ${DateServices.kTable.name} using (feed_id) '
       'inner join ${Trip.kTable.name} using (feed_id, itinerary_id, service_id) '
       'where feed_id = ? and stop_id = ? and date = ? and first_arrival <= ? and last_departure >= ?',
-      [stopId.feedId, stopId.id, date.toInt(), earliest.toInt(), latest.toInt()],
+      [stopId.feedId, stopId.id, date.toInt(), latest.toInt(), earliest.toInt()],
     );
 
     // 2. Now filter trips that definitely fit.
@@ -42,6 +42,9 @@ class ArrivalQueries {
       final sequenceId = row['sequence'] as int;
       if (trip.interval != null && trip.approximate) {
         // Frequency-based trip, we add it unconditionally.
+        trips.add(trip);
+      } else if (trip.interval != null) {
+        // Calculate which exact trips fall into the interval.
         trips.add(trip);
       } else {
         final arrival = trip.arrivals[sequenceId];
@@ -77,7 +80,8 @@ class ArrivalQueries {
       _database,
     ).getByIds(itineraryMap.values.expand((i) => i.stops.map((ii) => FeedId(i.id.feedId, ii.stopId))));
 
-    return trips
+    // TODO: frequency-based exact times trips need to be fixed wrt stop departures.
+    final arrivals = trips
         .map(
           (trip) => Arrival(
             trip.toSpecificTrip(
@@ -91,6 +95,8 @@ class ArrivalQueries {
           ),
         )
         .toList();
+    arrivals.sort();
+    return arrivals;
   }
 
   Future<List<ScheduleItem>> findDeparturesForDay(FeedId routeId, FeedId stopId, JustDate date) async {

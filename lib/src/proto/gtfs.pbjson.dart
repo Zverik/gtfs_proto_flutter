@@ -1,15 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from gtfs.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: gtfs.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
-// ignore_for_file: unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -164,14 +162,7 @@ final $typed_data.Uint8List gtfsHeaderDescriptor = $convert.base64Decode(
 const Agencies$json = {
   '1': 'Agencies',
   '2': [
-    {
-      '1': 'agencies',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.gtfs.Agency',
-      '10': 'agencies'
-    },
+    {'1': 'agencies', '3': 1, '4': 3, '5': 11, '6': '.gtfs.Agency', '10': 'agencies'},
   ],
 };
 
@@ -206,14 +197,7 @@ const Services$json = {
   '1': 'Services',
   '2': [
     {'1': 'base_date', '3': 1, '4': 1, '5': 13, '10': 'baseDate'},
-    {
-      '1': 'services',
-      '3': 2,
-      '4': 3,
-      '5': 11,
-      '6': '.gtfs.Service',
-      '10': 'services'
-    },
+    {'1': 'services', '3': 2, '4': 3, '5': 11, '6': '.gtfs.Service', '10': 'services'},
   ],
 };
 
@@ -247,14 +231,7 @@ final $typed_data.Uint8List serviceDescriptor = $convert.base64Decode(
 const Shapes$json = {
   '1': 'Shapes',
   '2': [
-    {
-      '1': 'shapes',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.gtfs.Shape',
-      '10': 'shapes'
-    },
+    {'1': 'shapes', '3': 1, '4': 3, '5': 11, '6': '.gtfs.Shape', '10': 'shapes'},
   ],
 };
 
@@ -281,14 +258,7 @@ final $typed_data.Uint8List shapeDescriptor = $convert.base64Decode(
 const Networks$json = {
   '1': 'Networks',
   '2': [
-    {
-      '1': 'networks',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.gtfs.Networks.NetworksEntry',
-      '10': 'networks'
-    },
+    {'1': 'networks', '3': 1, '4': 3, '5': 11, '6': '.gtfs.Networks.NetworksEntry', '10': 'networks'},
   ],
   '3': [Networks_NetworksEntry$json],
 };
@@ -313,14 +283,7 @@ final $typed_data.Uint8List networksDescriptor = $convert.base64Decode(
 const Areas$json = {
   '1': 'Areas',
   '2': [
-    {
-      '1': 'areas',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.gtfs.Areas.AreasEntry',
-      '10': 'areas'
-    },
+    {'1': 'areas', '3': 1, '4': 3, '5': 11, '6': '.gtfs.Areas.AreasEntry', '10': 'areas'},
   ],
   '3': [Areas_AreasEntry$json],
 };
@@ -349,8 +312,8 @@ const StringTable$json = {
 };
 
 /// Descriptor for `StringTable`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List stringTableDescriptor = $convert
-    .base64Decode('CgtTdHJpbmdUYWJsZRIYCgdzdHJpbmdzGAEgAygJUgdzdHJpbmdz');
+final $typed_data.Uint8List stringTableDescriptor = $convert.base64Decode(
+    'CgtTdHJpbmdUYWJsZRIYCgdzdHJpbmdzGAEgAygJUgdzdHJpbmdz');
 
 @$core.Deprecated('Use stopsDescriptor instead')
 const Stops$json = {
@@ -361,8 +324,8 @@ const Stops$json = {
 };
 
 /// Descriptor for `Stops`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List stopsDescriptor = $convert
-    .base64Decode('CgVTdG9wcxIgCgVzdG9wcxgBIAMoCzIKLmd0ZnMuU3RvcFIFc3RvcHM=');
+final $typed_data.Uint8List stopsDescriptor = $convert.base64Decode(
+    'CgVTdG9wcxIgCgVzdG9wcxgBIAMoCzIKLmd0ZnMuU3RvcFIFc3RvcHM=');
 
 @$core.Deprecated('Use stopDescriptor instead')
 const Stop$json = {
@@ -374,23 +337,9 @@ const Stop$json = {
     {'1': 'desc', '3': 4, '4': 1, '5': 9, '10': 'desc'},
     {'1': 'lat', '3': 5, '4': 1, '5': 17, '10': 'lat'},
     {'1': 'lon', '3': 6, '4': 1, '5': 17, '10': 'lon'},
-    {
-      '1': 'type',
-      '3': 7,
-      '4': 1,
-      '5': 14,
-      '6': '.gtfs.LocationType',
-      '10': 'type'
-    },
+    {'1': 'type', '3': 7, '4': 1, '5': 14, '6': '.gtfs.LocationType', '10': 'type'},
     {'1': 'parent_id', '3': 8, '4': 1, '5': 13, '10': 'parentId'},
-    {
-      '1': 'wheelchair',
-      '3': 9,
-      '4': 1,
-      '5': 14,
-      '6': '.gtfs.Accessibility',
-      '10': 'wheelchair'
-    },
+    {'1': 'wheelchair', '3': 9, '4': 1, '5': 14, '6': '.gtfs.Accessibility', '10': 'wheelchair'},
     {'1': 'platform_code', '3': 10, '4': 1, '5': 9, '10': 'platformCode'},
     {'1': 'zone', '3': 11, '4': 1, '5': 13, '10': 'zone'},
     {'1': 'areas', '3': 12, '4': 3, '5': 13, '10': 'areas'},
@@ -412,14 +361,7 @@ final $typed_data.Uint8List stopDescriptor = $convert.base64Decode(
 const Routes$json = {
   '1': 'Routes',
   '2': [
-    {
-      '1': 'routes',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.gtfs.Route',
-      '10': 'routes'
-    },
+    {'1': 'routes', '3': 1, '4': 3, '5': 11, '6': '.gtfs.Route', '10': 'routes'},
   ],
 };
 
@@ -436,32 +378,11 @@ const Route$json = {
     {'1': 'short_name', '3': 3, '4': 1, '5': 9, '10': 'shortName'},
     {'1': 'long_name', '3': 4, '4': 3, '5': 13, '10': 'longName'},
     {'1': 'desc', '3': 5, '4': 1, '5': 9, '10': 'desc'},
-    {
-      '1': 'type',
-      '3': 6,
-      '4': 1,
-      '5': 14,
-      '6': '.gtfs.RouteType',
-      '10': 'type'
-    },
+    {'1': 'type', '3': 6, '4': 1, '5': 14, '6': '.gtfs.RouteType', '10': 'type'},
     {'1': 'color', '3': 7, '4': 1, '5': 13, '10': 'color'},
     {'1': 'text_color', '3': 8, '4': 1, '5': 13, '10': 'textColor'},
-    {
-      '1': 'continuous_pickup',
-      '3': 9,
-      '4': 1,
-      '5': 14,
-      '6': '.gtfs.PickupDropoff',
-      '10': 'continuousPickup'
-    },
-    {
-      '1': 'continuous_dropoff',
-      '3': 10,
-      '4': 1,
-      '5': 14,
-      '6': '.gtfs.PickupDropoff',
-      '10': 'continuousDropoff'
-    },
+    {'1': 'continuous_pickup', '3': 9, '4': 1, '5': 14, '6': '.gtfs.PickupDropoff', '10': 'continuousPickup'},
+    {'1': 'continuous_dropoff', '3': 10, '4': 1, '5': 14, '6': '.gtfs.PickupDropoff', '10': 'continuousDropoff'},
     {'1': 'network', '3': 11, '4': 1, '5': 13, '10': 'network'},
     {'1': 'delete', '3': 12, '4': 1, '5': 8, '10': 'delete'},
   ],
@@ -482,14 +403,7 @@ final $typed_data.Uint8List routeDescriptor = $convert.base64Decode(
 const Itineraries$json = {
   '1': 'Itineraries',
   '2': [
-    {
-      '1': 'itineraries',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.gtfs.Itinerary',
-      '10': 'itineraries'
-    },
+    {'1': 'itineraries', '3': 1, '4': 3, '5': 11, '6': '.gtfs.Itinerary', '10': 'itineraries'},
   ],
 };
 
@@ -505,31 +419,11 @@ const Itinerary$json = {
     {'1': 'itinerary_id', '3': 1, '4': 1, '5': 13, '10': 'itineraryId'},
     {'1': 'route_id', '3': 2, '4': 1, '5': 13, '10': 'routeId'},
     {'1': 'stops', '3': 3, '4': 3, '5': 13, '10': 'stops'},
-    {
-      '1': 'opposite_direction',
-      '3': 4,
-      '4': 1,
-      '5': 8,
-      '10': 'oppositeDirection'
-    },
+    {'1': 'opposite_direction', '3': 4, '4': 1, '5': 8, '10': 'oppositeDirection'},
     {'1': 'shape_id', '3': 5, '4': 1, '5': 13, '10': 'shapeId'},
     {'1': 'headsigns', '3': 6, '4': 3, '5': 13, '10': 'headsigns'},
-    {
-      '1': 'pickup_types',
-      '3': 7,
-      '4': 3,
-      '5': 14,
-      '6': '.gtfs.PickupDropoff',
-      '10': 'pickupTypes'
-    },
-    {
-      '1': 'dropoff_types',
-      '3': 8,
-      '4': 3,
-      '5': 14,
-      '6': '.gtfs.PickupDropoff',
-      '10': 'dropoffTypes'
-    },
+    {'1': 'pickup_types', '3': 7, '4': 3, '5': 14, '6': '.gtfs.PickupDropoff', '10': 'pickupTypes'},
+    {'1': 'dropoff_types', '3': 8, '4': 3, '5': 14, '6': '.gtfs.PickupDropoff', '10': 'dropoffTypes'},
   ],
 };
 
@@ -551,8 +445,8 @@ const Trips$json = {
 };
 
 /// Descriptor for `Trips`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List tripsDescriptor = $convert
-    .base64Decode('CgVUcmlwcxIgCgV0cmlwcxgBIAMoCzIKLmd0ZnMuVHJpcFIFdHJpcHM=');
+final $typed_data.Uint8List tripsDescriptor = $convert.base64Decode(
+    'CgVUcmlwcxIgCgV0cmlwcxgBIAMoCzIKLmd0ZnMuVHJpcFIFdHJpcHM=');
 
 @$core.Deprecated('Use tripDescriptor instead')
 const Trip$json = {
@@ -562,22 +456,8 @@ const Trip$json = {
     {'1': 'itinerary_id', '3': 2, '4': 1, '5': 13, '10': 'itineraryId'},
     {'1': 'service_id', '3': 3, '4': 1, '5': 13, '10': 'serviceId'},
     {'1': 'short_name', '3': 4, '4': 1, '5': 9, '10': 'shortName'},
-    {
-      '1': 'wheelchair',
-      '3': 5,
-      '4': 1,
-      '5': 14,
-      '6': '.gtfs.Accessibility',
-      '10': 'wheelchair'
-    },
-    {
-      '1': 'bikes',
-      '3': 6,
-      '4': 1,
-      '5': 14,
-      '6': '.gtfs.Accessibility',
-      '10': 'bikes'
-    },
+    {'1': 'wheelchair', '3': 5, '4': 1, '5': 14, '6': '.gtfs.Accessibility', '10': 'wheelchair'},
+    {'1': 'bikes', '3': 6, '4': 1, '5': 14, '6': '.gtfs.Accessibility', '10': 'bikes'},
     {'1': 'approximate', '3': 7, '4': 1, '5': 8, '10': 'approximate'},
     {'1': 'departures', '3': 8, '4': 3, '5': 13, '10': 'departures'},
     {'1': 'arrivals', '3': 9, '4': 3, '5': 13, '10': 'arrivals'},
@@ -602,14 +482,7 @@ final $typed_data.Uint8List tripDescriptor = $convert.base64Decode(
 const Transfers$json = {
   '1': 'Transfers',
   '2': [
-    {
-      '1': 'transfers',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.gtfs.Transfer',
-      '10': 'transfers'
-    },
+    {'1': 'transfers', '3': 1, '4': 3, '5': 11, '6': '.gtfs.Transfer', '10': 'transfers'},
   ],
 };
 
@@ -628,21 +501,8 @@ const Transfer$json = {
     {'1': 'to_route', '3': 4, '4': 1, '5': 13, '10': 'toRoute'},
     {'1': 'from_trip', '3': 5, '4': 1, '5': 13, '10': 'fromTrip'},
     {'1': 'to_trip', '3': 6, '4': 1, '5': 13, '10': 'toTrip'},
-    {
-      '1': 'type',
-      '3': 7,
-      '4': 1,
-      '5': 14,
-      '6': '.gtfs.TransferType',
-      '10': 'type'
-    },
-    {
-      '1': 'min_transfer_time',
-      '3': 8,
-      '4': 1,
-      '5': 13,
-      '10': 'minTransferTime'
-    },
+    {'1': 'type', '3': 7, '4': 1, '5': 14, '6': '.gtfs.TransferType', '10': 'type'},
+    {'1': 'min_transfer_time', '3': 8, '4': 1, '5': 13, '10': 'minTransferTime'},
     {'1': 'delete', '3': 9, '4': 1, '5': 8, '10': 'delete'},
   ],
 };
@@ -660,14 +520,7 @@ final $typed_data.Uint8List transferDescriptor = $convert.base64Decode(
 const IdStore$json = {
   '1': 'IdStore',
   '2': [
-    {
-      '1': 'refs',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.gtfs.IdReference',
-      '10': 'refs'
-    },
+    {'1': 'refs', '3': 1, '4': 3, '5': 11, '6': '.gtfs.IdReference', '10': 'refs'},
   ],
 };
 
@@ -707,3 +560,4 @@ final $typed_data.Uint8List gtfsDeltaHeaderDescriptor = $convert.base64Decode(
     'Cg9HdGZzRGVsdGFIZWFkZXISHwoLb2xkX3ZlcnNpb24YASABKA1SCm9sZFZlcnNpb24SGAoHdm'
     'Vyc2lvbhgCIAEoDVIHdmVyc2lvbhISCgRkYXRlGAMgASgNUgRkYXRlEh4KCmNvbXByZXNzZWQY'
     'BCABKAhSCmNvbXByZXNzZWQSFgoGYmxvY2tzGAUgAygNUgZibG9ja3M=');
+

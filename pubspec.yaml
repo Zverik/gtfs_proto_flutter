@@ -12,7 +12,7 @@ dependencies:
     sdk: flutter
   sqflite: ^2.4.2+1
   latlong2: ^0.9.0
-  protobuf: ^6.0.0
+  protobuf: ^3.1.0
   zstandard: ^1.5.0
   fast_geohash: ^1.0.0
 

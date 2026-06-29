@@ -4,7 +4,6 @@ import 'package:fast_geohash/fast_geohash_str.dart';
 import 'package:gtfs_proto_flutter/src/database/database.dart';
 import 'package:gtfs_proto_flutter/src/database/feed_id.dart';
 import 'package:gtfs_proto_flutter/src/helpers/just_date.dart';
-import 'package:gtfs_proto_flutter/src/helpers/just_time.dart';
 import 'package:gtfs_proto_flutter/src/helpers/schedule_item.dart';
 import 'package:gtfs_proto_flutter/src/loader.dart';
 import 'package:gtfs_proto_flutter/src/models.dart';
@@ -21,8 +20,8 @@ class GtfsProto {
     queries = Queries(_database);
   }
 
-  void loadProto(String feedName, Uint8List content) async {
-    await _loader.loadFromBytes(feedName, content);
+  Future<void> loadProto(String feedName, Uint8List content, [LoaderCallback? callback]) async {
+    await _loader.loadFromBytes(feedName, content, callback);
   }
 
   Future<Stop?> getStopByCode(String feedName, String stopCode) => queries.stops.getByCode(feedName, stopCode);
